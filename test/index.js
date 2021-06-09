@@ -5,6 +5,7 @@ const childProcess = require('child_process');
 dotenv.config({path: "test/.env.test"})
 
 const UserApi = require("./UserApi");
+const PasswordApi = require("./PasswordApi");
 
 
 
@@ -14,6 +15,7 @@ class Main {
     console.log("run()");
 
     const userApi = new UserApi();
+    const passwordApi = new PasswordApi();
 
     const userData = {
       username: "username1023",
@@ -26,6 +28,9 @@ class Main {
 
     const users = await userApi.get();
     console.log("users", users);
+
+    const passwords = await passwordApi.get();
+    console.log("passwords", passwords);
 
     console.log("\x1b[32m", "done", "\x1b[0m");
 

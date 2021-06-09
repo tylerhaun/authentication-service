@@ -13,6 +13,9 @@ module.exports = function(sequelize) {
         return cuid();
       },
     },
+    userId: {
+      type: DataTypes.STRING,
+    },
     hash: {
       type: DataTypes.STRING,
     },

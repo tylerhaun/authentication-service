@@ -16,10 +16,12 @@ class Main {
     const userApi = new UserApi();
 
     const userData = {
-      username: "username",
-      password: "password1",
+      username: "username1023",
+      email: "test@example.com",
+      phoneNumber: "555-123-4567",
+      password: "test",
     }
-    const createUserResponse = await userApi.create({});
+    const createUserResponse = await userApi.create(userData);
     console.log("createUserResponse", createUserResponse);
 
     const users = await userApi.get();

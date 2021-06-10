@@ -1,10 +1,24 @@
 const _ = require("lodash");
-const Joi = require('joi');
+const Joi = require("joi");
+const phone = require("phone");
 
 const db = require("../models")
 const AbstractController = require("./AbstractController");
 
 const PasswordController = require("./PasswordController");
+const SmsVerificationRequestController = require("./SmsVerificationRequestController");
+
+
+function phoneValidator(value, helpers) {
+  var phoneData = phone(value)
+  if (phoneData[1] == null) {
+    return helpers.error("any.invalid");
+  }
+  if (phoneData[1] != "USA") {
+    return helpers.message("{{#label}} must be a USA number");
+  }
+  return phoneData[0];
+}
 
 
 class UserController extends AbstractController {
@@ -24,11 +38,15 @@ class UserController extends AbstractController {
       username: Joi.string().required(),
       password: Joi.string().required(),
       email: Joi.string(),
-      phoneNumber: Joi.string(),
+      phoneNumber: Joi.string().custom(phoneValidator),
+      smsVerification: Joi.boolean(),
+      emailVerification: Joi.boolean(),
     });
     const validated = Joi.attempt(data, schema);
+    console.log("validated", validated);
 
-    const userCreateArgs = _.pick(validated, ["username, email, phoneNumbr"]);
+
+    const userCreateArgs = _.pick(validated, ["username", "email", "phoneNumber"]);
 
     console.log("userCreateArgs", userCreateArgs);
     const createdUser = await this.model.create(userCreateArgs);
@@ -44,7 +62,16 @@ class UserController extends AbstractController {
     console.log("createdPassword", createdPassword);
 
     // email verification
+
     // sms verification
+    const svrCreateArgs = {
+      phoneNumber: createdUser.phoneNumber,
+      userId: createdUser.id,
+    };
+    console.log("svrCreateArgs", svrCreateArgs);
+    const smsVerificationRequestController = new SmsVerificationRequestController();
+    const createdSvr = await smsVerificationRequestController.create(svrCreateArgs);
+    console.log("createdSvr", createdSvr);
 
     return createdUser;
 

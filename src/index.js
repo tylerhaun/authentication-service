@@ -23,10 +23,10 @@ class Main {
     require("./routes/users")(app);
     require("./routes/passwords")(app);
 
-    app.use(function(error, request, response, next) {
+    app.use(function ErrorHandlerMiddleware(error, request, response, next) {
       console.error(error);
       response.status(500)
-      return response.send(error);
+      return response.json(error);
     })
 
 

@@ -20,8 +20,12 @@ class Main {
     const userData = {
       username: "username1023",
       email: "test@example.com",
-      phoneNumber: "555-123-4567",
+      phoneNumber: process.env.TEST_PHONE_NUMBER,
+      //phoneNumber: "+852 6569-8900",
+      //phoneNumber: "555 123 1234",
       password: "test",
+      //emailVerification: true,
+      smsVerification: true,
     }
     const createUserResponse = await userApi.create(userData);
     console.log("createUserResponse", createUserResponse);
@@ -31,6 +35,7 @@ class Main {
 
     const passwords = await passwordApi.get();
     console.log("passwords", passwords);
+
 
     console.log("\x1b[32m", "done", "\x1b[0m");
 

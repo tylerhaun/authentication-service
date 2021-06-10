@@ -21,7 +21,6 @@ class Utils {
   }
 
   async hashPassword(plaintext) {
-    console.log("hashPassword", plaintext); // DELETE
 
     const saltRounds = 10;
     const hash = await new Promise(function(resolve, reject) {
@@ -38,23 +37,6 @@ class Utils {
 
   }
 
-  //hashPassword: async function hashPassword(plaintext) {
-  //  console.log("hashPassword", plaintext); // DELETE
-
-  //  const saltRounds = 10;
-  //  const hash = await new Promise(function(resolve, reject) {
-  //    bcrypt.hash(plaintext, saltRounds, (err, hash) => {
-  //      if (error) {
-  //        console.error(error);
-  //        return reject(error);
-  //      }
-  //      return resolve(hash);
-  //    });
-  //  })
-  //  console.log("hash", hash);
-  //  return hash;
-  //}
-
   middlewareMethodWrapper(method, inputFields) {
     if (!Array.isArray(inputFields)) {
       inputFields = [inputFields];
@@ -62,16 +44,9 @@ class Utils {
     return async function middleware(request, response, next) {
       try {
         console.log("calling", method);
-        var data;
-        //if (inputField) {
-        //  data = await method(request[inputField], request, response, next);
-        //}
-        //else {
-        //  data = await method(request, response, next);
-        //}
         const preArgs = inputFields.map(field => request[field])
         const fullArgs = [...preArgs, request, response, next];
-        data = await method.apply(null, fullArgs);
+        const data = await method.apply(null, fullArgs);
         return response.json(data);
       }
       catch(error) {
@@ -80,6 +55,19 @@ class Utils {
         return next(error);
       }
     }
+  }
+
+  restRoutes(routeName, controller /* AbstractController */, app) {
+
+    app.route(`/${routeName}`)
+      .post(this.middlewareMethodWrapper(controller.create.bind(controller), "body"))
+      .get(this.middlewareMethodWrapper(controller.find.bind(controller), "query"))
+
+    app.route(`/${routeName}/:id`)
+      .get(this.middlewareMethodWrapper(controller.findById.bind(controller), "params"))
+      .post(this.middlewareMethodWrapper(controller.update.bind(controller), ["params", "body"]))
+      .delete(this.middlewareMethodWrapper(controller.delete.bind(controller), "params"))
+
   }
 
 };

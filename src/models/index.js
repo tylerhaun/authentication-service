@@ -32,13 +32,14 @@ class Db {
     const result = await sequelize.sync();
     console.log("sequelize synced");
 
-    await Promise.all(new Array(10).fill(null).map(n => {
-      return this.User.create({
-        username: "test" + Math.round(Math.random() * 10000),
-        email: `test${Math.round(Math.random()*10000)}@test.com`
-      });
-    
-    }))
+    //await Promise.all(new Array(10).fill(null).map(n => {
+    //  return this.User.create({
+    //    username: "test" + Math.round(Math.random() * 10000),
+    //    email: `test${Math.round(Math.random()*10000)}@test.com`
+    //    phoneNumber: "202-225-4965"
+    //  });
+    //
+    //}))
     //console.log(await this.User.findAll())
 
   }
@@ -48,6 +49,10 @@ class Db {
   
     this.User = require("./User")(sequelize);
     this.Password = require("./Password")(sequelize);
+    this.SmsVerification = require("./SmsVerification")(sequelize);
+    this.SmsVerificationRequest = require("./SmsVerificationRequest")(sequelize);
+    this.EmailVerification = require("./EmailVerification")(sequelize);
+    this.EmailVerificationRequest = require("./EmailVerificationRequest")(sequelize);
   
   }
 

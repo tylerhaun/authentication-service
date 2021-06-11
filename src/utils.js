@@ -1,4 +1,5 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
+const phone = require("phone");
 
 
 const maxPageSize = 100;
@@ -24,6 +25,15 @@ class Utils {
 
     const saltRounds = 10;
     const hash = await new Promise(function(resolve, reject) {
+
+      //const salt = await bcrypt.genSalt(saltRounds, function(error, salt) {
+      //  if (error) {
+      //    reject(error);
+      //  }
+      //  return salt;
+      //});
+      //return await bcrypt.hash(password, salt);
+      
       bcrypt.hash(plaintext, saltRounds, (error, hash) => {
         if (error) {
           console.error(error);
@@ -83,6 +93,31 @@ class Utils {
       .get(this.middlewareMethodWrapper(controller.findById.bind(controller), "params"))
       .post(this.middlewareMethodWrapper(controller.update.bind(controller), ["params", "body"]))
       .delete(this.middlewareMethodWrapper(controller.delete.bind(controller), "params"))
+
+  }
+
+  joiPhoneValidator(value, helpers) {
+    var phoneData = phone(value)
+    if (phoneData[1] == null) {
+      return helpers.error("any.invalid");
+    }
+    if (phoneData[1] != "USA") {
+      return helpers.message("{{#label}} must be a USA number");
+    }
+    return phoneData[0];
+  }
+
+
+  randomString(length, characters) {
+
+    length = length || 6;
+    characters = characters || "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    var result = '';
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
 
   }
 

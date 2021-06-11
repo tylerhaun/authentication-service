@@ -27,7 +27,13 @@ module.exports = function(sequelize) {
     },
     externalId: {
       type: DataTypes.STRING,
-    }
+    },
+    expiration: {
+      type: DataTypes.DATE,
+    },
+    approved: {
+      type: DataTypes.BOOLEAN,
+    },
   }, {
     sequelize,
     modelName: "sms_verification_request",

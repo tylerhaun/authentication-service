@@ -3,22 +3,23 @@ const Joi = require("joi");
 const phone = require("phone");
 
 const db = require("../models")
+const utils = require("../utils");
 const AbstractController = require("./AbstractController");
 
 const PasswordController = require("./PasswordController");
 const SmsVerificationRequestController = require("./SmsVerificationRequestController");
 
 
-function phoneValidator(value, helpers) {
-  var phoneData = phone(value)
-  if (phoneData[1] == null) {
-    return helpers.error("any.invalid");
-  }
-  if (phoneData[1] != "USA") {
-    return helpers.message("{{#label}} must be a USA number");
-  }
-  return phoneData[0];
-}
+//function joiPhoneValidator(value, helpers) {
+//  var phoneData = phone(value)
+//  if (phoneData[1] == null) {
+//    return helpers.error("any.invalid");
+//  }
+//  if (phoneData[1] != "USA") {
+//    return helpers.message("{{#label}} must be a USA number");
+//  }
+//  return phoneData[0];
+//}
 
 
 class UserController extends AbstractController {
@@ -38,7 +39,7 @@ class UserController extends AbstractController {
       username: Joi.string().required(),
       password: Joi.string().required(),
       email: Joi.string(),
-      phoneNumber: Joi.string().custom(phoneValidator),
+      phoneNumber: Joi.string().custom(utils.joiPhoneValidator),
       smsVerification: Joi.boolean(),
       emailVerification: Joi.boolean(),
     });
@@ -72,6 +73,15 @@ class UserController extends AbstractController {
     const smsVerificationRequestController = new SmsVerificationRequestController();
     const createdSvr = await smsVerificationRequestController.create(svrCreateArgs);
     console.log("createdSvr", createdSvr);
+
+
+    await new Promise(function(resolve, reject) {setTimeout(() => resolve(), 2000)});
+
+    const svrApproval = await smsVerificationRequestController.approve({
+      userId: createdSvr.userId,
+      code: createdSvr.code
+    })
+    console.log("svrApproval", svrApproval);
 
     return createdUser;
 

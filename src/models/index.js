@@ -53,6 +53,7 @@ class Db {
     this.SmsVerificationRequest = require("./SmsVerificationRequest")(sequelize);
     this.EmailVerification = require("./EmailVerification")(sequelize);
     this.EmailVerificationRequest = require("./EmailVerificationRequest")(sequelize);
+    this.Login = require("./Login")(sequelize);
   
   }
 

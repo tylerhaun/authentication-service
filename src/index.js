@@ -17,11 +17,15 @@ class Main {
 
     const app = express()
 
+    app.get("/ping", function pingHandler(request, response, next) {
+      return response.json({pong: true});
+    })
 
     app.use(bodyParser.json())
 
     require("./routes/users")(app);
     require("./routes/passwords")(app);
+    require("./routes/login")(app);
 
     app.use(function ErrorHandlerMiddleware(error, request, response, next) {
       console.error(error);

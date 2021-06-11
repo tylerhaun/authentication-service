@@ -37,6 +37,22 @@ class Utils {
 
   }
 
+  async comparePassword(plaintext, hash) {
+    console.log("comparePassword", plaintext, hash);
+
+    return new Promise(function(resolve, reject) {
+
+      bcrypt.compare(plaintext, hash, (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+        return resolve(result);
+      });
+
+    })
+  
+  }
+
   middlewareMethodWrapper(method, inputFields) {
     if (!Array.isArray(inputFields)) {
       inputFields = [inputFields];

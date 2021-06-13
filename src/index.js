@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const bodyParser = require("body-parser");
 const express = require("express");
 
@@ -17,15 +19,21 @@ class Main {
 
     const app = express()
 
+    app.use(function(request, response, next) {
+      console.log(Date.now(), request.ip, request.path);
+      return next();
+    })
+
     app.get("/ping", function pingHandler(request, response, next) {
       return response.json({pong: true});
     })
 
     app.use(bodyParser.json())
 
-    require("./routes/users")(app);
-    require("./routes/passwords")(app);
-    require("./routes/login")(app);
+    //require("./routes/users")(app);
+    //require("./routes/passwords")(app);
+    //require("./routes/login")(app);
+    this.addRoutes(app)
 
     app.use(function ErrorHandlerMiddleware(error, request, response, next) {
       console.error(error);
@@ -41,6 +49,25 @@ class Main {
         process.send("server.started");
       }
     })
+
+  }
+
+  addRoutes(app) {
+  
+    const files = fs.readdirSync(path.join(__dirname, "routes"))
+    console.log("files", files);
+    const _this = this;
+    files
+      .filter(file => file.endsWith(".js"))
+      .filter(file => file != "index.js")
+      .forEach(file => {
+        console.log("file", file);
+        //const nameWithoutExt = path.basename(path.basename(file), path.extname(file));
+        const requirePath = `./routes/${file}`;
+        console.log("requirePath", requirePath);
+        require(requirePath)(app);
+    })
+    console.log(this);
 
   }
 

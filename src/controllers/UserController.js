@@ -65,23 +65,24 @@ class UserController extends AbstractController {
     // email verification
 
     // sms verification
-    const svrCreateArgs = {
-      phoneNumber: createdUser.phoneNumber,
-      userId: createdUser.id,
-    };
-    console.log("svrCreateArgs", svrCreateArgs);
-    const smsVerificationRequestController = new SmsVerificationRequestController();
-    const createdSvr = await smsVerificationRequestController.create(svrCreateArgs);
-    console.log("createdSvr", createdSvr);
+    //const svrCreateArgs = {
+    //  phoneNumber: createdUser.phoneNumber,
+    //  userId: createdUser.id,
+    //};
+    //console.log("svrCreateArgs", svrCreateArgs);
+    //const smsVerificationRequestController = new SmsVerificationRequestController();
+    //const createdSvr = await smsVerificationRequestController.create(svrCreateArgs);
+    //console.log("createdSvr", createdSvr);
 
 
-    await new Promise(function(resolve, reject) {setTimeout(() => resolve(), 2000)});
+    //await new Promise(function(resolve, reject) {setTimeout(() => resolve(), 2000)});
 
-    const svrApproval = await smsVerificationRequestController.approve({
-      userId: createdSvr.userId,
-      code: createdSvr.code
-    })
-    console.log("svrApproval", svrApproval);
+    //const smsVerificationRequestController = new SmsVerificationRequestController();
+    //const svrApproval = await smsVerificationRequestController.approve({
+    //  userId: createdSvr.userId,
+    //  code: createdSvr.code
+    //})
+    //console.log("svrApproval", svrApproval);
 
     return createdUser;
 

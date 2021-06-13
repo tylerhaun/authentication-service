@@ -34,6 +34,9 @@ module.exports = function(sequelize) {
     approved: {
       type: DataTypes.BOOLEAN,
     },
+    loginChallengeId: {
+      type: DataTypes.STRING,
+    }
   }, {
     sequelize,
     modelName: "sms_verification_request",

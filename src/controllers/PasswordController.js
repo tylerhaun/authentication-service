@@ -77,6 +77,27 @@ class PasswordController extends AbstractController {
   }
 
 
+  async findCurrent(query) {
+
+    const schema = Joi.object({
+      userId: Joi.string().required(),
+    });
+    const validated = Joi.attempt(query, schema);
+
+    const findArgs = {
+      where: {
+        userId: validated.userId,
+      },
+      order: [
+        ["createdAt", "DESC"]
+      ]
+    };
+    const password = await this.model.findOne(findArgs);
+    return password;
+  
+  }
+
+
 }
 
 module.exports = PasswordController;

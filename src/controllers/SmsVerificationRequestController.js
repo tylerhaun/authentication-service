@@ -37,6 +37,7 @@ class SmsVerificationRequestController extends AbstractController {
       userId: Joi.string().required(),
       code: Joi.string(),
       expiration: Joi.string(),
+      loginChallengeId: Joi.string(),
     });
     const validated = Joi.attempt(data, schema);
 
@@ -52,17 +53,16 @@ class SmsVerificationRequestController extends AbstractController {
       throw new Error("Too many requests.  Please try again later");
     }
 
-
     const code = validated.code || utils.randomString(6);
 
-    //const smsProviderFactory = new SmsProviderFactory()
+    const smsProviderFactory = new SmsProviderFactory()
     //const smsProvider = smsProviderFactory.getSmsProvider(smsProviderType);
-    //const sendSmsArgs = {
-    //  phoneNumber: validated.phoneNumber,
-    //  message: `Your code is ${code}`,
-    //};
-    //const result = await smsProvider.send(sendSmsArgs);
-    const result = {};
+    const smsProvider = smsProviderFactory.getSmsProvider("test");
+    const sendSmsArgs = {
+      phoneNumber: validated.phoneNumber,
+      message: `Your code is ${code}`,
+    };
+    const result = await smsProvider.send(sendSmsArgs);
     console.log("result", result);
 
     const expiration = validated.expiration ? moment(validated.expiration) : moment().add(1, "minute");

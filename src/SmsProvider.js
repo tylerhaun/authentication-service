@@ -18,6 +18,8 @@ class SmsProviderFactory {
 
   getSmsProvider(type) {
     switch(type) {
+      case "test":
+        return new TestSmsProvider();
       case "twilio":
         return new TwilioSmsProvider();
       default:
@@ -54,6 +56,24 @@ class TwilioSmsProvider {
       messageId: response.sid
     };
 
+  }
+
+}
+
+
+class TestSmsProvider {
+
+  async send(args) {
+  
+    const message = {
+      event: "sms.sent",
+      ...args,
+    };
+    process.send(JSON.stringify(message));
+
+    return {
+      messageId: 0
+    }
   }
 
 }

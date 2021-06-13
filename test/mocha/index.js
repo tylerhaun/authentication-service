@@ -6,6 +6,8 @@ dotenv.config();
 
 
 
+var smsBuffer;
+
 class TestServer {
 
   async start() {
@@ -46,11 +48,26 @@ class TestServer {
         }
       })
 
+      server.on("message", (m) => {
+        console.log("received message", m);
+        try {
+          var data = JSON.parse(m);
+          console.log(data);
+          if (data.event == "sms.sent") {
+            smsBuffer = data.message;
+            console.log("smsBuffer");
+          }
+        }
+        catch(e) {}
+      })
+
     })
   
   }
 
 }
+
+
 
 
 
@@ -76,11 +93,13 @@ const apiRequest = axios.create(axiosConfig);
 describe("Test test server", () => {
   it("should ping", async () => {
     const response = await apiRequest.get("ping");
-    console.log("response", response);
+    console.log("response.data", response.data);
   })
 })
 
 
+const username = "test";
+const password = "password1";
 
 var userId; // TODO hacky; fix
 describe("API", () => {
@@ -89,10 +108,10 @@ describe("API", () => {
       it("should successfully create a new user", async function() {
         this.timeout(5000);
         const userData = {
-          username: "test",
+          username,
           email: "test@test.com",
           phoneNumber: "716-555-5555",
-          password: "test"
+          password,
         };
         const result = await apiRequest.post("users", userData);
         console.log(result.status)
@@ -105,12 +124,37 @@ describe("API", () => {
     it("should successfully login", async function() {
       this.timeout(5000);
       const userData = {
-        username: "test",
-        password: "test"
+        username,
+        challenges: ["password", "sms"]
       };
-      const result = await apiRequest.post("login", userData);
-      console.log(result.status)
-      console.log("result", result.data);
+      const response = await apiRequest.post("login", userData);
+      console.log(response.status)
+      console.log("response.data", response.data);
+      const challenge = response.data.challenge;
+      console.log("challenge", challenge);
+
+
+      console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 1\n\n\n\n\n\n\n\n")
+      const challengeData = {
+        code: password,
+      };
+      const response2 = await apiRequest.post(`login-challenges/${challenge.id}/complete`, challengeData);
+      console.log("response2.data", response2.data)
+      const challenge2 = response2.data.challenge;
+      console.log("challenge2", challenge2);
+
+      console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 2\n\n\n\n\n\n\n\n")
+      //console.log("sleeping for code...");
+      //await new Promise(function(resolve, reject) {setTimeout(() => resolve(), 1000)})
+      const code = smsBuffer.split(" ")[3];
+      console.log("code", code);
+      const challengeData2 = {
+        code,
+      };
+      const response3 = await apiRequest.post(`login-challenges/${challenge2.id}/complete`, challengeData2);
+      console.log("response3.data", response3.data)
+
+
     })
   })
 })

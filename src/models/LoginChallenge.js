@@ -2,7 +2,7 @@ const cuid = require('cuid');
 const { Model, DataTypes } = require('sequelize');
 
 
-const types = ["password", "sms", "email"];
+const types = ["password", "sms", "email", "question", "tpa"]; // tpa - third party authenticator
 
 module.exports = function(sequelize) {
 
@@ -26,6 +26,12 @@ module.exports = function(sequelize) {
     },
     index: {
       type: DataTypes.INTEGER,
+    },
+    smsVerificationRequestId: {
+      type: DataTypes.STRING,
+    },
+    emailVerificationRequestId: {
+      type: DataTypes.STRING,
     },
     //completed: {
     //  type: DataTypes.BOOLEAN,

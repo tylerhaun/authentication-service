@@ -5,15 +5,20 @@ const moment = require("moment");
 
 const utils = require("../utils");
 const db = require("../models")
-const AbstractController = require("./AbstractController");
 
-const UserController = require("./UserController");
-const PasswordController = require("./PasswordController");
+//const AbstractController = require("./AbstractController");
+import AbstractController from "./AbstractController";
+
+//const UserController = require("./UserController");
+//const PasswordController = require("./PasswordController");
+import UserController from "./UserController";
+import PasswordController from "./PasswordController";
 
 const { SmsProviderFactory } = require("../SmsProvider");
 
 
 const secret = "test";
+export const challengeTypes = ["password", "sms", "email"];
 
 class LoginChallengeController extends AbstractController {
 
@@ -21,18 +26,47 @@ class LoginChallengeController extends AbstractController {
     return db.LoginChallenge;
   }
 
-  async complete(query, data) {
+  async createFromArray(data) {
 
+    const schema = Joi.object({
+      challenges: Joi.array().items(Joi.string().valid(...challengeTypes)),
+      userId: Joi.string().required(),
+      loginId: Joi.string().required(),
+    });
+    const validated = Joi.attempt(data, schema);
+
+    const challengesData = validated.challenges.map((challenge, index) => {
+      return {
+        userId: validated.userId,
+        loginId: validated.loginId,
+        type: challenge,
+        index,
+      };
+    })
+    const createdChallenges = await super.create(challengesData);
+    return createdChallenges;
+
+  }
+
+  async complete(query, data) {
     console.log("LoginChallengeController.complete()", query, data);
-    const loginChallenge = await this.model.findOne({where: {id: query.id}});
+    const schema = Joi.object({
+      query: Joi.object({
+        id: Joi.string().required(),
+      }),
+      data: Joi.object({
+        code: Joi.string().required(),
+      }),
+    });
+    const validated = Joi.attempt({query, data}, schema);
+
+    const loginChallenge = await this.model.findOne({where: {id: validated.query.id}});
     console.log("loginChallege", loginChallenge);
     if (!loginChallenge) {
       throw new Error("No login challenge found");
     }
 
-    const userId = loginChallenge.userId;
-
-    const result = await this.completeChallenge(loginChallenge, data.code)
+    const result = await this.completeChallenge(loginChallenge, validated.data.code)
     //const loginChallengeStrategyFactory = new LoginChallengeStrategyFactory();
     //const loginChallengeStrategy = loginChallengeStrategyFactory.get(loginChallenge.type)
 
@@ -44,7 +78,7 @@ class LoginChallengeController extends AbstractController {
     }
 
     const loginChallenges = await this.find({
-      userId,
+      userId: loginChallenge.userId,
       loginId: loginChallenge.loginId,
     })
     console.log("loginChallenges", loginChallenges);
@@ -61,11 +95,12 @@ class LoginChallengeController extends AbstractController {
       //await nextChallengeStrategy.start();
       //return nextChallenge;
     }
+    else {
+      const token = jwt.sign({user: {id: loginChallenge.userId}}, secret, {expiresIn: "1h"})
+      console.log("token", token);
 
-    const token = jwt.sign({user: {id: userId}}, secret, {expiresIn: "1h"})
-    console.log("token", token);
-
-    return {token};
+      return {token};
+    }
 
   }
 
@@ -156,31 +191,40 @@ class PasswordChallengeStrategy extends LoginChallengeStrategy {
 }
 
 
-const SmsVerificationRequestController = require("./SmsVerificationRequestController");
+//const SmsVerificationRequestController = require("./SmsVerificationRequestController");
+import  SmsVerificationRequestController from "./SmsVerificationRequestController";
 class SmsChallengeStrategy extends LoginChallengeStrategy {
 
   async start(challenge) {
     console.log("SmsChallengeStrategy.start()");
 
     const userController = new UserController();
-    const user = await userController.model.findOne({where: {id: challenge.userId}});
+    const user = await userController.findOne({id: challenge.userId});
     console.log("user", user);
 
     const svrCreateArgs = {
-      phoneNumber: user.phoneNumber,
-      userId: user.id,
-      loginChallengeId: challenge.id,
+      userId: challenge.userId,
+      //code: Joi.string(),
+
+      //to: user.phoneNumber,
+      //userId: user.id,
+      //loginChallengeId: challenge.id,
     };
     console.log("svrCreateArgs", svrCreateArgs);
     const smsVerificationRequestController = new SmsVerificationRequestController();
     const createdSvr = await smsVerificationRequestController.create(svrCreateArgs);
     console.log("createdSvr", createdSvr);
+
+    const loginChallengeController = new LoginChallengeController();
+    const updateResult = await loginChallengeController.update({id: challenge.id}, {smsVerificationRequestId: createdSvr.id});
+    console.log("updateResult", updateResult);
+
     return challenge;
 
   }
 
   async complete(data) {
-    console.log("SmsChallengeStrategy.complete()");
+    console.log("SmsChallengeStrategy.complete()", data);
 
     const schema = Joi.object({
       challenge: Joi.object(),
@@ -189,7 +233,7 @@ class SmsChallengeStrategy extends LoginChallengeStrategy {
     const validated = Joi.attempt(data, schema);
 
     const smsVerificationRequestController = new SmsVerificationRequestController();
-    const svr = await smsVerificationRequestController.model.findOne({where: {loginChallengeId: validated.challenge.id}});
+    const svr = await smsVerificationRequestController.findOne({id: validated.challenge.smsVerificationRequestId});
     console.log("svr", svr);
 
     console.log(validated.code, svr.code);
@@ -197,6 +241,7 @@ class SmsChallengeStrategy extends LoginChallengeStrategy {
   
   }
 }
+
 class EmailChallengeStrategy extends LoginChallengeStrategy {
   async start() {
   
@@ -210,5 +255,6 @@ class EmailChallengeStrategy extends LoginChallengeStrategy {
 
 
 
-module.exports = LoginChallengeController;
+//module.exports = LoginChallengeController;
+export default LoginChallengeController;
 

@@ -16,11 +16,17 @@ module.exports = function(sequelize) {
     userId: {
       type: DataTypes.STRING,
     },
+    provider: {
+      type: DataTypes.STRING,
+    },
     email: {
       type: DataTypes.STRING,
     },
     code: {
       type: DataTypes.STRING,
+    },
+    approvedAt: {
+      type: DataTypes.DATE,
     }
   }, {
     sequelize,

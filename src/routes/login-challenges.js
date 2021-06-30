@@ -1,5 +1,6 @@
 const utils = require("../utils");
-const LoginChallengeController = require("../controllers/LoginChallengeController");
+//const LoginChallengeController = require("../controllers/LoginChallengeController");
+import LoginChallengeController from "../controllers/LoginChallengeController";
 
 
 const routeName = "login-challenges"

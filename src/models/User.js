@@ -22,6 +22,18 @@ module.exports = function(sequelize) {
     phoneNumber: {
       type: DataTypes.STRING,
     },
+    requireSmsVerification: {
+      type: DataTypes.BOOLEAN,
+    },
+    requireEmailVerification: {
+      type: DataTypes.BOOLEAN,
+    },
+    requireQuestion: {
+      type: DataTypes.BOOLEAN,
+    },
+    requireTpa: {
+      type: DataTypes.BOOLEAN,
+    },
   }, {
     sequelize,
     modelName: "user",

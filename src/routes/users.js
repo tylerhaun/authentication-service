@@ -3,7 +3,8 @@ const Joi = require('joi');
 const utils = require("../utils");
 
 //const db = require("../models")
-const UserController = require("../controllers/UserController");
+//const UserController = require("../controllers/UserController");
+import UserController from "../controllers/UserController";
 
 const routeName = "users";
 

@@ -16,7 +16,8 @@ const twilio = require('twilio');
 
 class SmsProviderFactory {
 
-  getSmsProvider(type) {
+  get(type) {
+    console.log("SmsProviderFactory.get()", type);
     switch(type) {
       case "test":
         return new TestSmsProvider();
@@ -38,7 +39,7 @@ class TwilioSmsProvider {
 
   async send(args) {
     console.log("TwilioSmsProvider.send()")
-    const { phoneNumber, message } = args;
+    const { to, message } = args;
 
     var accountSid = process.env.TWILIO_ACCOUNT_SID;
     var authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -47,7 +48,7 @@ class TwilioSmsProvider {
 
     const createArgs = {
       body: message,
-      to: phoneNumber,
+      to,
       from: process.env.TWILIO_PHONE_NUMBER,
     };
     const response = await client.messages.create(createArgs);
@@ -64,12 +65,21 @@ class TwilioSmsProvider {
 class TestSmsProvider {
 
   async send(args) {
+    console.log("TestSmsProvider.send()", args);
   
-    const message = {
-      event: "sms.sent",
-      ...args,
-    };
-    process.send(JSON.stringify(message));
+    const event = "sms.sent";
+    //const message = {
+    //  event: "sms.sent",
+    //  ...args,
+    //};
+    //process.send(JSON.stringify(message));
+    try {
+      console.log("global.testEventEmitter", global.testEventEmitter);
+      const result = global.testEventEmitter.emit(event, args);
+      console.log("result", result);
+    }
+    catch(e) {console.error(e)}
+    
 
     return {
       messageId: 0

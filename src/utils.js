@@ -1,3 +1,4 @@
+console.log("In utils");
 const bcrypt = require("bcrypt");
 const phone = require("phone");
 
@@ -7,6 +8,7 @@ class Utils {
 
   parsePaginationParams(query) {
     console.log("parsePaginationParams", query);
+    query = query || {};
     const page = query.page || 0;
     const pageSize = query.pageSize || 10;
 
@@ -121,7 +123,74 @@ class Utils {
 
   }
 
+
+  async signJwtToken(data) {
+  
+    const schema = Joi.object({
+      data: Joi.object().defaut({}),
+      options: Joi.object({
+        expiresIn: Joi.string().default("1h")
+      }),
+    });
+    const validated = Joi.attempt(data, schema);
+
+    var token = jwt.sign(validated.data, secret, validated.options)
+    //var token = jwt.sign({userId: validated.userId}, secret, {expiresIn: "1h"})
+    return token;
+  
+  }
+
+  async verifyJwtToken(data) {
+
+    const schema = Joi.object({
+      token: Joi.string().required(),
+    });
+    const validated = Joi.attempt(data, schema);
+  
+    var result = jwt.verify(validated.token, secret);
+    return result;
+  
+  }
+
 };
+
+
+class HttpError extends Error {
+  constructor(args) {
+    const { message, status } = args;
+    super(message);
+    this.name = this.constructor.name;
+    this.message = message;
+    this.status = status;
+  }
+}
+
+function ErrorHandlerMiddleware(error, request, response, next) {
+  var httpError;
+  if (error instanceof HttpError) {
+    httpError = error;
+  }
+  else {
+    var message;
+    if (process.env.CONCEAL_ERRORS == true) {
+      message = process.env.CONCEAL_ERRORS_MESSAGE || "Set CONCEAL_ERRORS_MESSAGE for custom message";
+      console.error(error);
+    }
+    else {
+      message = error.message;
+    }
+    const errorArgs = {
+      message,
+      status: "500",
+    };
+    httpError = new HttpError(errorArgs);
+  }
+
+  return response.status(httpError.status).json({error: httpError.message})
+
+}
+
+
 
 module.exports = new Utils();
 

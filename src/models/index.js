@@ -1,3 +1,4 @@
+console.log("In models");
 const fs = require("fs");
 const path = require("path");
 const { Sequelize } = require('sequelize');
@@ -23,7 +24,8 @@ const { Sequelize } = require('sequelize');
 
 
 const sequelizeConfig = 'sqlite::memory:';
-const sequelize = new Sequelize(sequelizeConfig);
+const sequelize = new Sequelize(sequelizeConfig, {query:{raw:true}});
+
 
 class Db {
 
@@ -50,25 +52,14 @@ class Db {
     console.log("db.loadModels()");
 
     const files = fs.readdirSync(__dirname)
-    console.log("files", files);
     const _this = this;
     files
       .filter(file => file.endsWith(".js"))
       .filter(file => file != "index.js")
       .forEach(file => {
-        console.log("file", file);
         const nameWithoutExt = path.basename(path.basename(file), path.extname(file));
         _this[nameWithoutExt] = require(`./${file}`)(sequelize);
     })
-    console.log(this);
-  
-    ///this.User = require("./User")(sequelize);
-    ///this.Password = require("./Password")(sequelize);
-    ///this.SmsVerification = require("./SmsVerification")(sequelize);
-    ///this.SmsVerificationRequest = require("./SmsVerificationRequest")(sequelize);
-    ///this.EmailVerification = require("./EmailVerification")(sequelize);
-    ///this.EmailVerificationRequest = require("./EmailVerificationRequest")(sequelize);
-    ///this.Login = require("./Login")(sequelize);
   
   }
 

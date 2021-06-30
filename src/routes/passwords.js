@@ -1,5 +1,6 @@
 const utils = require("../utils");
-const PasswordController = require("../controllers/PasswordController");
+//const PasswordController = require("../controllers/PasswordController");
+import PasswordController from "../controllers/PasswordController";
 
 
 const routeName = "passwords"

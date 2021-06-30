@@ -1,5 +1,6 @@
 const utils = require("../utils");
-const LoginController = require("../controllers/LoginController");
+//const LoginController = require("../controllers/LoginController");
+import LoginController from "../controllers/LoginController";
 
 
 const routeName = "login"

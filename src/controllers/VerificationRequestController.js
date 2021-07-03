@@ -145,6 +145,8 @@ class VerificationRequestController extends AbstractController {
     const schema = Joi.object({
       //email: Joi.string().required(),
       userId: Joi.string().required(),
+      emailAddressId: Joi.string(),
+      phoneNumberId: Joi.string(),
       subject: Joi.string(),
       text: Joi.string(),
       code: Joi.string(),
@@ -153,7 +155,7 @@ class VerificationRequestController extends AbstractController {
     });
     const validated = Joi.attempt(data, schema);
 
-    this._assertRecentLimit({userId: validated.userId}, 2);
+    this._assertCreateRecentLimit({userId: validated.userId}, 2);
 
     const UserController = require("./UserController").default; // hack for circular dependency
     console.log("UserController", UserController);
@@ -168,23 +170,6 @@ class VerificationRequestController extends AbstractController {
     const sendArgs = {code, user};
     const sendResult = await this._send(sendArgs);
     console.log("sendResult", sendResult);
-    //const sendResult = this._send({code, userId: validated.userId});
-
-    //const emailProviderFactory = new EmailProviderFactory()
-    //const emailProvider = emailProviderFactory.get(emailProviderType);
-    ////const smsProvider = smsProviderFactory.getSmsProvider("test");
-    //const subject = validated.subject || "Please verify your email";
-    //const verifyUrl = "http://localhost:3000/{{code}}" //TODO put in env
-    //const template = validated.text || `Click this link to verify your email: ${verifyUrl}`;
-    //const text = handlebars.compile(template)({code, user})
-
-    //const sendEmailArgs = {
-    //  to: user.email,
-    //  subject,
-    //  text,
-    //};
-    //const result = await emailProvider.send(sendEmailArgs);
-    //console.log("result", result);
 
 
     const expiration = validated.expiration ? moment(validated.expiration) : moment().add(1, "minute");
@@ -203,8 +188,8 @@ class VerificationRequestController extends AbstractController {
 
   }
 
-  async _assertRecentLimit(query, limit) {
-    console.log(`${this.constructor.name}._assertRecentLimit()`, {query, limit});
+  async _assertCreateRecentLimit(query, limit) {
+    console.log(`${this.constructor.name}._assertCreateRecentLimit()`, {query, limit});
     limit = limit || 2;
 
     const schema = Joi.object({
@@ -230,48 +215,30 @@ class VerificationRequestController extends AbstractController {
     console.log(`${this.constructor.name}.approve()`, data);
 
     const schema = Joi.object({
-      code: Joi.string(),
+      id: Joi.string().required(),
+      userId: Joi.string().required(),
     });
     const validated = Joi.attempt(data, schema);
 
-    const evrFindArgs = {
-      code: validated.code,
-      approvedAt: null,
-      //createdAt: {
-      //  [Symbol.for("lt")]: moment().subtract(5, "minutes")
-      //},
-      
-      //userId: validated.userId,
-      //expiration: {
-      //  [Symbol.for("gt")]: moment()
-      //}
-    };
-    console.log("evrFindArgs", evrFindArgs);
-    const evrs = await this.find(evrFindArgs)
-    console.log("evrs", evrs);
-    if (evrs.length == 0) {
-      throw new Error("Invalid code");
-    }
-    const activeEvrs = evrs.filter(evr => moment(evr.createdAt) > moment().subtract(1, "minute"))
-    //const activeEvrs = evrs.filter(evr => {
-    //  console.log("evr.createdAt", evr.createdAt);
-    //  const createdAt = moment(evr.createdAt);
-    //  console.log({createdAt});
-    //  const expiration = moment().subtract(1, "minute");
-    //  console.log({createdAt, expiration});
-    //  const ret = createdAt > expiration;
-    //  console.log({createdAt, expiration, ret});
-    //  return ret;
-    //})
-    console.log("activeEvrs", activeEvrs);
-    //if (evr.createdAt > moment.subtract(5, "minutes")) {
+    //const evrFindArgs = {
+    //  id: validated.id,
+    //  approvedAt: null,
+    //};
+    //console.log("evrFindArgs", evrFindArgs);
+    //const evrs = await this.find(evrFindArgs)
+    //console.log("evrs", evrs);
+    //if (evrs.length == 0) {
+    //  throw new Error("Invalid code");
+    //}
+    //const activeEvrs = evrs.filter(evr => moment(evr.createdAt) > moment().subtract(1, "minute"))
+    //console.log("activeEvrs", activeEvrs);
+    //if (activeEvrs.length == 0 && evrs.length > 0) {
     //  throw new Error("Email verification has expired");
     //}
-    //const evrs = await smsVerificationRequestController.findOne(svrFindArgs)
-    if (activeEvrs.length == 0 && evrs.length > 0) {
-      throw new Error("Email verification has expired");
-    }
-    const evr = activeEvrs[0];
+    //const evr = activeEvrs[0];
+    //console.log("evr", evr);
+
+    const evr = await this._getAndAssertApproveExpiration({id: validated.id, userId: validated.userId})
     console.log("evr", evr);
 
     const updateEvrQuery = {
@@ -287,16 +254,34 @@ class VerificationRequestController extends AbstractController {
     console.log("updatedEvr", updatedEvr);
     return updatedEvr;
 
-    //const smsVerificationCreateArgs = {
-    //  userId: validated.userId,
-    //  smsVerificationRequestId: svr.id,
-    //};
-    //console.log("smsVerificationCreateArgs", smsVerificationCreateArgs);
-    //const createdSmsVerification = await this.model.create(smsVerificationCreateArgs);
-    //console.log("createdSmsVerification", createdSmsVerification);
+  }
 
-    //return createdSmsVerification;
-  
+  async _getAndAssertApproveExpiration(query) {
+    console.log(`${this.constructor.name}._getAndAssertApproveExpiration()`, query);
+
+    const evrFindArgs = {
+      id: query.id,
+      userId: query.userId,
+      //approvedAt: null,
+    };
+    console.log("evrFindArgs", evrFindArgs);
+    const evrs = await this.find(evrFindArgs)
+    console.log("evrs", evrs);
+    if (evrs.length == 0) {
+      throw new Error("Invalid code");
+    }
+    const activeEvrs = evrs.filter(evr => moment(evr.createdAt) > moment().subtract(1, "minute"))
+    console.log("activeEvrs", activeEvrs);
+    if (activeEvrs.length == 0 && evrs.length > 0) {
+      throw new Error("Email verification has expired");
+    }
+    const evr = activeEvrs[0];
+    if (evr.approvedAt != null) {
+      throw new Error("Code has already been used");
+    }
+    console.log("evr", evr);
+    return evr;
+
   }
 
 }

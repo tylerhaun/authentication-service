@@ -1,4 +1,3 @@
-console.log("In models");
 const fs = require("fs");
 const path = require("path");
 const { Sequelize } = require('sequelize');
@@ -58,6 +57,7 @@ class Db {
       .filter(file => file != "index.js")
       .forEach(file => {
         const nameWithoutExt = path.basename(path.basename(file), path.extname(file));
+        console.log("requiring", file);
         _this[nameWithoutExt] = require(`./${file}`)(sequelize);
     })
   

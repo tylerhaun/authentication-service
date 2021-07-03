@@ -1,35 +1,18 @@
 const _ = require("lodash");
 const Joi = require("joi");
 const phone = require("phone");
+const moment = require("moment");
 
 const db = require("../models")
 const utils = require("../utils");
 
-//const AbstractController = require("./AbstractController");
 import AbstractController from "./AbstractController";
-
-//const PasswordController = require("./PasswordController");
-//const SmsVerificationRequestController = require("./SmsVerificationRequestController");
-//const EmailVerificationRequestController = require("./EmailVerificationRequestController");
 import PasswordController from "./PasswordController";
-import VerificationRequestController from "./VerificationRequestController";
-console.log("VerificationRequestController", VerificationRequestController);
+import EmailAddressController from "./EmailAddressController";
+import PhoneNumberController from "./PhoneNumberController";
 import EmailVerificationRequestController from "./EmailVerificationRequestController";
-console.log("EmailVerificationRequestController", EmailVerificationRequestController);
-//import SmsVerificationRequestController from "./SmsVerificationRequestController";
-//console.log("SmsVerificationRequestController", SmsVerificationRequestController);
-
-
-//function joiPhoneValidator(value, helpers) {
-//  var phoneData = phone(value)
-//  if (phoneData[1] == null) {
-//    return helpers.error("any.invalid");
-//  }
-//  if (phoneData[1] != "USA") {
-//    return helpers.message("{{#label}} must be a USA number");
-//  }
-//  return phoneData[0];
-//}
+import AuthorizedDeviceController from "./AuthorizedDeviceController";
+import AuthorizedIpAddressController from "./AuthorizedIpAddressController";
 
 
 class UserController extends AbstractController {
@@ -43,69 +26,107 @@ class UserController extends AbstractController {
   }
 
 
-  async sendVerificationEmail(args) {
-    console.log(`${this.constructor.name}.sendVerificationEmail()`, args);
+  //async _sendVerificationEmail(args) {
+  //  console.log(`${this.constructor.name}._sendVerificationEmail()`, args);
 
-    const schema = Joi.object({
-      userId: Joi.string().required(),
-    });
-    const validated = Joi.attempt(args, schema);
+  //  const schema = Joi.object({
+  //    userId: Joi.string().required(),
+  //  });
+  //  const validated = Joi.attempt(args, schema);
 
-    const code = utils.randomString(60)
+  //  const code = utils.randomString(60)
 
-    const evrCreateArgs = {
-      userId: validated.userId,
-      //subject: "",
-      //text: "",
-      code,
-      //expiration: "",
-      //loginChallengeId: "",
-    };
-    console.log("evrCreateArgs", evrCreateArgs);
-    const emailVerificationRequestController = new EmailVerificationRequestController();
-    const createdEvr = await emailVerificationRequestController.create(evrCreateArgs);
-    console.log("createdEvr", createdEvr);
-    return createdEvr;
-    
-  }
+  //  const evrCreateArgs = {
+  //    userId: validated.userId,
+  //    //subject: "",
+  //    //text: "",
+  //    code,
+  //    //expiration: "",
+  //    //loginChallengeId: "",
+  //  };
+  //  console.log("evrCreateArgs", evrCreateArgs);
+  //  const emailVerificationRequestController = new EmailVerificationRequestController();
+  //  const createdEvr = await emailVerificationRequestController.create(evrCreateArgs);
+  //  console.log("createdEvr", createdEvr);
+  //  return createdEvr;
+  //  
+  //}
 
 
+  //async verifyEmail(data) {
+  //  console.log(`${this.constructor.name}.verifyEmail()`, data);
+
+  //  const schema = Joi.object({
+  //    code: Joi.string().required(),
+  //    userId: Joi.string(), // optional userId to verify
+  //  });
+  //  const validated = Joi.attempt(data, schema);
+
+  //  // The code used for email verifications is big and unlikely to happen twice, so simple logic can be used here.
+  //  // If the code is expired, none will be found and user gets an error to retry
+  //  const expiry = "1m"
+  //  const expiryMoment = moment().subtract(utils.formatDuration(expiry));
+  //  const emailVerificationRequestController = new EmailVerificationRequestController();
+  //  const evrFindArgs = {
+  //    code: validated.code,
+  //    createdAt: {
+  //      [Symbol.for("gt")]: expiryMoment,
+  //    }
+  //  };
+  //  if (validated.userId) {
+  //    Object.assign(evrFindArgs, {userId: validated.userId});
+  //  }
+  //  console.log("evrFindArgs", evrFindArgs);
+  //  const evr = await emailVerificationRequestController.findOne()
+  //  if (!evr) {
+  //    throw new Error("No code found");
+  //  }
+
+  //  await emailVerificationRequestController.approve({id: evr.id});
+
+  //  const updateResult = await this.update({
+  //    id: evr.userId
+  //  }, {
+  //    emailVerified: true,
+  //  });
+  //  console.log("updateResult", updateResult);
+  //
+  //}
+
+
+  /*
+   * Lookup active evr, emailAddress,
+   * calls emailAddress.verify()
+   *
+   */
   async verifyEmail(data) {
     console.log(`${this.constructor.name}.verifyEmail()`, data);
 
     const schema = Joi.object({
       code: Joi.string().required(),
-      //userId: Joi.string().required(),
+      //emailAddressId: Joi.string(),
+      userId: Joi.string().required(),
     });
     const validated = Joi.attempt(data, schema);
 
-    //const emailVerificationRequestController = new EmailVerificationRequestController();
-    //const evrCreateArgs = {
-    //  userId: Joi.string().required(),
-    //  subject: Joi.string(),
-    //  text: Joi.string(),
-    //  code: Joi.string(),
-    //  expiration: Joi.string(),
-    //  loginChallengeId: Joi.string(),
-    //};
-    //const createdEvr = await EmailVerificationRequestController.create(evrCreateArgs);
+    const emailVerificationRequestController = new EmailVerificationRequestController();
+    const evr = await emailVerificationRequestController.findOne({code: validated.code, userId: validated.userId});
+    console.log("evr", evr);
 
-    //const user = await this.model.findOne({
-    //  where: {
-    //    id: validated.userId
-    //  }
-    //});
+    const emailAddressController = new EmailAddressController();
+    const emailAddress = await emailAddressController.findOne({id: evr.emailAddressId})
+    console.log("emailAddress", emailAddress);
 
+    const verifyEmailData = {
+      code: validated.code,
+      userId: validated.userId
+    };
+    await emailAddressController.verify({id: emailAddress.id}, verifyEmailData)
 
-    //verificationRequestController.create({
-    //  type: "sms|email"
-    //  //provider: "default"
-    //  to: "phone/email"
-    //  code: "optional code; autogens"
-    //  expiration: "optional expiration"
-    //})
-  
+    return evr;
+
   }
+
 
   async create(data) {
     console.log(`${this.constructor.name}.create()`, data);
@@ -119,18 +140,22 @@ class UserController extends AbstractController {
       requireEmailVerification: Joi.boolean(),
       requireQuestion: Joi.boolean(),
       requireTpa: Joi.boolean(),
-      verifyEmail: Joi.boolean(),
+      //verifyEmail: Joi.boolean(),
+      ipAddress: Joi.string().required(),
+      userAgent: Joi.string().required(),
     })
     const validated = Joi.attempt(data, schema);
     console.log("validated", validated);
 
-    const userPickFields = ["username", "email", "phoneNumber", "requireEmailVerification", "requireSmsVerification", "requireQuestion", "requireTpa"];
+    const userPickFields = ["username", "phoneNumber", "requireEmailVerification", "requireSmsVerification", "requireQuestion", "requireTpa"];
     const userCreateArgs = _.pick(validated, userPickFields);
 
     console.log("userCreateArgs", userCreateArgs);
     const createdUser = await super.create(userCreateArgs);
     console.log("createdUser", createdUser);
 
+
+    // create password
     const passwordCreateArgs = {
       password: data.password,
       userId: createdUser.id,
@@ -140,77 +165,67 @@ class UserController extends AbstractController {
     const createdPassword = await passwordController.create(passwordCreateArgs);
     console.log("createdPassword", createdPassword);
 
-    // email verification
-    const evr = await this.sendVerificationEmail({
+
+    // create emailAddress
+    const emailCreateArgs = {
       userId: createdUser.id,
-    })
+      emailAddress: validated.email,
+      isPrimary: true,
+    };
+    const emailAddressController = new EmailAddressController();
+    const emailAddress = await emailAddressController.create(emailCreateArgs);
 
-    // sms verification
-    //const svrCreateArgs = {
-    //  phoneNumber: createdUser.phoneNumber,
-    //  userId: createdUser.id,
-    //};
-    //console.log("svrCreateArgs", svrCreateArgs);
-    //const smsVerificationRequestController = new SmsVerificationRequestController();
-    //const createdSvr = await smsVerificationRequestController.create(svrCreateArgs);
-    //console.log("createdSvr", createdSvr);
+    const evr = await emailAddressController.startVerification({id: emailAddress.id});
 
 
-    //await new Promise(function(resolve, reject) {setTimeout(() => resolve(), 2000)});
+    // create phoneNumber
+    // TODO
+    const phoneCreateArgs = {
+      userId: createdUser.id,
+      phoneNumber: validated.phoneNumber,
+      isPrimary: true,
+    };
+    const phoneNumberController = new PhoneNumberController();
+    const phoneNumber = await phoneNumberController.create(phoneCreateArgs);
+    console.log("phoneNumber", phoneNumber);
 
-    //const smsVerificationRequestController = new SmsVerificationRequestController();
-    //const svrApproval = await smsVerificationRequestController.approve({
-    //  userId: createdSvr.userId,
-    //  code: createdSvr.code
-    //})
-    //console.log("svrApproval", svrApproval);
+    //const svr = await phoneNumberController.startVerification({id: phoneNumber.id});
+
+
+    if (validated.userAgent) {
+      const authorizedDeviceController = new AuthorizedDeviceController();
+      const ad = await authorizedDeviceController.create({
+        userId: createdUser.id,
+        userAgent: validated.userAgent,
+      })
+      console.log("authorizedDevice", ad);
+    }
+
+
+    if (validated.ipAddress) {
+      const authorizedIpAddressController = new AuthorizedIpAddressController();
+      const aia = await authorizedIpAddressController.create({
+        userId: createdUser.id,
+        ipAddress: validated.ipAddress,
+      })
+      console.log("authorizedIpAddress", aia);
+    }
 
     return {
      ...createdUser,
+      emailAddresses: [
+        _.pick(emailAddress, ["id", "emailAddress"]),
+      ],
+      phoneNumbers: [
+        _.pick(phoneNumber, ["id", "phoneNumber"]),
+      ],
       evr: _.pick(evr, "id"),
     };
 
   }
 
-  //async findById(request) {
-  //  const id = request.params.id;
-  //  return db.User.findOne({where: {id}})
-  //}
-
-  //async find(request) {
-
-  //  const schema = Joi.object({
-  //    id: Joi.string(),
-  //    username: Joi.string(),
-  //    email: Joi.string(),
-  //    phoneNumber: Joi.string(),
-  //  });
-
-  //  const query = Joi.attempt(request.query, schema);
-
-  //  const query = request.query
-  //  const findOptions = {
-  //    where: 
-  //  };
-  //  return db.User.findAll({})
-  //}
-
-  //async update(request) {
-  //  //const schema = Joi.object({
-  //  //  email,
-  //  //})
-  //  //const data = Joi.attempt(request.body, schema);
-  //  //const id = request.params.id;
-  //  //if (!id
-  //  //return db.User.update(data, )
-  //}
-
-  //async delete(request) {
-  //
-  //}
-
 }
 
-//module.exports = UserController;
+
 export default UserController;
 

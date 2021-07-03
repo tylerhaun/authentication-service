@@ -4,8 +4,8 @@ const { Model, DataTypes } = require('sequelize');
 
 module.exports = function(sequelize) {
 
-  class EmailVerificationRequest extends Model {}
-  EmailVerificationRequest.init({
+  class AuthorizedIpAddress extends Model {}
+  AuthorizedIpAddress.init({
     id: {
       primaryKey: true,
       type: DataTypes.STRING,
@@ -15,30 +15,20 @@ module.exports = function(sequelize) {
     },
     userId: {
       type: DataTypes.STRING,
+      required: true,
     },
-    emailAddressId: {
+    ipAddress: {
       type: DataTypes.STRING,
-    },
-    provider: {
-      type: DataTypes.STRING,
-    },
-    //email: {
-    //  type: DataTypes.STRING,
-    //},
-    code: {
-      type: DataTypes.STRING,
-    },
-    approvedAt: {
-      type: DataTypes.DATE,
+      required: true,
     },
   }, {
     sequelize,
-    modelName: "email_verification_request",
+    modelName: "authorized_ip_address",
     timestamps: true,
     paranoid: true,
   });
 
-  return EmailVerificationRequest;
+  return AuthorizedIpAddress;
 
 }
 

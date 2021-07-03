@@ -27,6 +27,9 @@ module.exports = function(sequelize) {
     index: {
       type: DataTypes.INTEGER,
     },
+    completedAt: {
+      type: DataTypes.DATE,
+    },
     smsVerificationRequestId: {
       type: DataTypes.STRING,
     },

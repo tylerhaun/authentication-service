@@ -4,8 +4,8 @@ const { Model, DataTypes } = require('sequelize');
 
 module.exports = function(sequelize) {
 
-  class EmailVerificationRequest extends Model {}
-  EmailVerificationRequest.init({
+  class PhoneNumber extends Model {}
+  PhoneNumber.init({
     id: {
       primaryKey: true,
       type: DataTypes.STRING,
@@ -15,30 +15,26 @@ module.exports = function(sequelize) {
     },
     userId: {
       type: DataTypes.STRING,
+      required: true,
     },
-    emailAddressId: {
+    phoneNumber: {
       type: DataTypes.STRING,
+      required: true,
     },
-    provider: {
-      type: DataTypes.STRING,
+    verified: {
+      type: DataTypes.BOOLEAN,
     },
-    //email: {
-    //  type: DataTypes.STRING,
-    //},
-    code: {
-      type: DataTypes.STRING,
-    },
-    approvedAt: {
-      type: DataTypes.DATE,
+    isPrimary: {
+      type: DataTypes.BOOLEAN,
     },
   }, {
     sequelize,
-    modelName: "email_verification_request",
+    modelName: "phone_number",
     timestamps: true,
     paranoid: true,
   });
 
-  return EmailVerificationRequest;
+  return PhoneNumber;
 
 }
 

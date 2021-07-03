@@ -16,13 +16,13 @@ module.exports = function(sequelize) {
     userId: {
       type: DataTypes.STRING,
     },
-    success: {
-      type: DataTypes.BOOLEAN,
+    succeededAt: {
+      type: DataTypes.DATE,
     },
     ipAddress: {
       type: DataTypes.STRING,
     },
-    device: {
+    userAgent: {
       type: DataTypes.STRING,
     },
   }, {

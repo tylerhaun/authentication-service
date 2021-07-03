@@ -16,7 +16,7 @@ module.exports = function(sequelize) {
     userId: {
       type: DataTypes.STRING,
     },
-    phoneNumber: {
+    phoneNumberId: {
       type: DataTypes.STRING,
     },
     code: {
@@ -31,12 +31,9 @@ module.exports = function(sequelize) {
     expiration: {
       type: DataTypes.DATE,
     },
-    approved: {
-      type: DataTypes.BOOLEAN,
+    approvedAt: {
+      type: DataTypes.DATE,
     },
-    loginChallengeId: {
-      type: DataTypes.STRING,
-    }
   }, {
     sequelize,
     modelName: "sms_verification_request",

@@ -3,6 +3,8 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const express = require("express");
 
+import { errorHandlerMiddleware } from "./http-errors";
+
 const sequelize = require("./sequelize");
 
 
@@ -20,7 +22,7 @@ class Main {
     const app = express();
 
     app.use(function(request, response, next) {
-      console.log(Date.now(), request.ip, request.path);
+      console.log(Date.now(), request.ip, request.method, request.path, request.headers);
       return next();
     })
 
@@ -32,11 +34,12 @@ class Main {
 
     this.addRoutes(app)
 
-    app.use(function ErrorHandlerMiddleware(error, request, response, next) {
-      console.error(error);
-      response.status(500)
-      return response.json(error);
-    })
+    app.use(errorHandlerMiddleware)
+    //app.use(function ErrorHandlerMiddleware(error, request, response, next) {
+    //  console.error(error);
+    //  response.status(500)
+    //  return response.json(error);
+    //})
 
 
     const port = process.env.PORT;

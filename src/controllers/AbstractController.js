@@ -1,3 +1,4 @@
+import HttpError from "../http-errors";
 const utils = require("../utils")
 
 
@@ -5,6 +6,9 @@ class AbstractController {
 
   constructor() {
     this.model = this._getModel()
+    if (!this.model) {
+      throw new Error("_getModel must return a sequelize model");
+    }
   }
 
   _getModel() {
@@ -33,17 +37,21 @@ class AbstractController {
       where: query,
     }
     Object.assign(options, paginationParams);
-    console.log("options", options);
     return this.model.findAll(options);
   }
 
-  async findOne(query) {
+  async findOne(query, options) {
     console.log(this.constructor.name, "AbstractController.findOne()");
-    const options = {
+    options = options || {};
+    const sequelizeOptions = {
       where: query,
     }
-    console.log("options", options);
-    return this.model.findOne(options);
+    const record = await this.model.findOne(sequelizeOptions);
+    if (!record && (options.skipError != true)) {
+      const modelName = this.model.name.replace(/_/g, " ");
+      throw new HttpError({message: `${modelName} not found`, status: 404})
+    }
+    return record;
   }
 
   async findById(query) {
@@ -64,9 +72,9 @@ class AbstractController {
       where: {
         id,
       },
-      returning: true,
+      //returning: true,
+      //plain: true,
     };
-    console.log({data, options})
     return this.model.update(data, options);
   }
 

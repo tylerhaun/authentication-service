@@ -39,8 +39,6 @@ class EventAwaitter {
 
   cleanup() {
     console.log("EventAwaitter.cleanup()");
-    console.log(this);
-    console.log(this._handleEvent);
     //this.eventEmitter.off(this._handleEvent.bind(this))
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
@@ -63,7 +61,6 @@ class EventAwaitter {
 
   _handleEvent(data) {
     console.log("EventAwaitter._handleEvent()", data);
-    console.log("got event", data);
     this.cleanup();
     return this.resolve(data);
   }
@@ -225,9 +222,16 @@ describe('loading express', function() {
 //})
 //
 //
-const username = "test";
-const email = "test@test.com"
-const password = "password1";
+
+const ip = "192.168.1.1"
+const ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_3_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Safari/537.36";
+const globals = {
+  username: "test",
+  email: "test@test.com",
+  password: "password1",
+  token: "",
+  userId: "",
+}
 
 var userId; // TODO hacky; fix
 describe("API", () => {
@@ -265,26 +269,29 @@ describe("API", () => {
 
         //const email = "test@test.com"
         const userData = {
-          username: email,
-          email,
+          username: globals.email,
+          email: globals.email,
           phoneNumber: "716-555-5555",
-          password,
+          password: globals.password,
+          userAgent: ua,
+          ipAddress: ip,
         };
         //const result = await apiRequest.post("users", userData);
-        const response = await request.post("/users").send(userData).expect(200);
+        const response = await request.post("/users").set("user-agent", ua).send(userData).expect(200);
         console.log(response.status)
         console.log("response", response.body);
+        const userId = response.body.id;
+        globals.userId = userId;
+        console.log({globals});
         const sentEmail = await emailPromise;
         console.log("sentEmail", sentEmail);
         const code = sentEmail.text.split("/").pop();
         console.log("code", code);
 
-        const response2 = await request.post("/email-verification-requests/approve").send({code}).expect(200);
+        const response2 = await request.post("/users/verifyEmail").send({code, userId}).expect(200);
         console.log(response2.status)
         console.log("response2", response2.body);
 
-        //console.log("emailBuffer", emailBuffer);
-        //const result = await apiRequest.post("users", userData);
       })
     })
 
@@ -292,8 +299,10 @@ describe("API", () => {
       it("should successfully login", async function() {
         this.timeout(10000);
         const userData = {
-          username: email,
-          challenges: ["password", "sms"]
+          username: globals.email,
+          challenges: ["password", "sms"],
+          ipAddress: ip,
+          userAgent: ua,
         };
         const response = await request.post("/login").send(userData).expect(200);
         console.log(response.status)
@@ -308,13 +317,12 @@ describe("API", () => {
           eventEmitter: testEventEmitter,
           event: "sms.sent"
         };
-        //const sentSms = await awaitEvent({eventEmitter: testEventEmitter, event: "sms.sent"});
         const eventAwaitter = new EventAwaitter(eventAwaitterArgs);
         eventAwaitter.listen();
 
 
         const challengeData = {
-          code: password,
+          code: globals.password,
         };
         const response2 = await request.post(`/login-challenges/${challenge.id}/complete`).send(challengeData).expect(200);
         console.log("response2.body", response2.body)
@@ -344,10 +352,154 @@ describe("API", () => {
         };
         const response3 = await request.post(`/login-challenges/${challenge2.id}/complete`).send(challengeData2).expect(200);
         console.log("response3.body", response3.body)
+        const token = response3.body.token;
+        globals.token = token;
+        const userId = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()).user.id;
+        console.log("userId", userId)
+        globals.userId = userId;
 
 
       })
+
+      it("should fail login from ip address", async function() {
+        this.timeout(10000);
+        const wrongIp = "192.168.1.2";
+        const userData = {
+          username: globals.email,
+          challenges: ["password"],
+          ipAddress: wrongIp,
+          userAgent: ua,
+        };
+        const response = await request.post("/login").send(userData).expect(200);
+        console.log(response.status)
+        console.log("response.body", response.body);
+        const challenge = response.body.challenge;
+        console.log("challenge", challenge);
+
+
+        console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 1\n\n\n\n\n\n\n\n")
+
+
+        const challengeData = {
+          code: globals.password,
+        };
+        const response2 = await request.post(`/login-challenges/${challenge.id}/complete`).send(challengeData).expect(401);
+        console.log("response2.body", response2.body)
+        const challenge2 = response2.body.challenge;
+        console.log("challenge2", challenge2);
+
+      })
+
+      it("should fail login from device", async function() {
+        this.timeout(10000);
+        const wrongUa = "Mozilla/5.0 (iPhone; U; CPU iPhone OS 5_1_1 like Mac OS X; en) AppleWebKit/534.46.0 (KHTML, like Gecko) CriOS/19.0.1084.60 Mobile/9B206 Safari/7534.48.3"
+        const userData = {
+          username: globals.email,
+          challenges: ["password"],
+          ipAddress: ip,
+          userAgent: wrongUa,
+        };
+        const response = await request.post("/login").send(userData).expect(200);
+        console.log(response.status)
+        console.log("response.body", response.body);
+        const challenge = response.body.challenge;
+        console.log("challenge", challenge);
+
+
+        console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 1\n\n\n\n\n\n\n\n")
+
+        const challengeData = {
+          code: globals.password,
+        };
+        const response2 = await request.post(`/login-challenges/${challenge.id}/complete`).send(challengeData).expect(401);
+        console.log("response2.body", response2.body)
+        const challenge2 = response2.body.challenge;
+        console.log("challenge2", challenge2);
+
+      })
+
     })
+
+    describe("Email", function() {
+      it("should create and verify a second email address", async function() {
+
+        const emailAddressData = {
+          userId: globals.userId,
+          emailAddress: "test2@test.com",
+          isPrimary: true,
+        };
+        console.log("emailAddressData", emailAddressData);
+        const response = await request.post(`/email-addresses`).send(emailAddressData).expect(200);
+        console.log("response.body", response.body)
+        const emailId = response.body.id;
+
+
+        const eventAwaitterArgs = {
+          eventEmitter: testEventEmitter,
+          event: "email.sent"
+        };
+        const eventAwaitter = new EventAwaitter(eventAwaitterArgs);
+        eventAwaitter.listen();
+
+
+        const response2 = await request.post(`/email-addresses/${emailId}/startVerification`).expect(200);
+        console.log("response2.body", response2.body)
+
+
+        const sentEmail = await eventAwaitter.get();
+        console.log("sentEmail", sentEmail);
+        const code = sentEmail.text.split("/").pop();
+        const verifyData = {
+          code,
+          userId: globals.userId,
+        };
+        const response3 = await request.post(`/email-addresses/${emailId}/verify`).send(verifyData).expect(200);
+        console.log("response3.body", response3.body)
+
+      })
+    })
+
+    describe("PhoneNumber", function() {
+      it("should create and verify a second phone number", async function() {
+
+        const phoneNumberData = {
+          userId: globals.userId,
+          phoneNumber: "680-555-5555",
+          isPrimary: true,
+        };
+        console.log("phoneNumberData", phoneNumberData);
+        const response = await request.post(`/phone-numbers`).send(phoneNumberData).expect(200);
+        console.log("response.body", response.body)
+        const phoneNumberId = response.body.id;
+
+
+        const eventAwaitterArgs = {
+          eventEmitter: testEventEmitter,
+          event: "sms.sent"
+        };
+        const eventAwaitter = new EventAwaitter(eventAwaitterArgs);
+        eventAwaitter.listen();
+
+
+        const response2 = await request.post(`/phone-numbers/${phoneNumberId}/startVerification`).expect(200);
+        console.log("response2.body", response2.body)
+
+
+        const sentSms = await eventAwaitter.get();
+        console.log("sentSms", sentSms);
+        const code = sentSms.message.split(" ")[3];
+        const verifyData = {
+          code,
+          userId: globals.userId,
+        };
+        const response3 = await request.post(`/phone-numbers/${phoneNumberId}/verify`).send(verifyData).expect(200);
+        console.log("response3.body", response3.body)
+
+
+        
+      })
+    })
+
   })
 })
 

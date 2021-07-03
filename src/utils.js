@@ -1,9 +1,13 @@
-console.log("In utils");
 const bcrypt = require("bcrypt");
+const Joi = require("joi");
+const jwt = require("jsonwebtoken");
+const moment = require("moment");
 const phone = require("phone");
 
 
+const secret = "test";
 const maxPageSize = 100;
+
 class Utils {
 
   parsePaginationParams(query) {
@@ -124,15 +128,15 @@ class Utils {
   }
 
 
-  async signJwtToken(data) {
+  async signJwtToken(data, options) {
   
     const schema = Joi.object({
-      data: Joi.object().defaut({}),
+      data: Joi.object(),
       options: Joi.object({
         expiresIn: Joi.string().default("1h")
       }),
     });
-    const validated = Joi.attempt(data, schema);
+    const validated = Joi.attempt({data, options}, schema);
 
     var token = jwt.sign(validated.data, secret, validated.options)
     //var token = jwt.sign({userId: validated.userId}, secret, {expiresIn: "1h"})
@@ -152,43 +156,74 @@ class Utils {
   
   }
 
+  /*
+   * input duratinString
+   * eg 1m, 12hours, 10s
+   * returns moment.duration() of the formatted time
+   */
+  formatDuration(durationString) {
+
+    if (!(typeof durationString === 'string' || duratinString instanceof String)) {
+      throw new Error("must be a string");
+    }
+
+    var r = new RegExp("([0-9]*)([a-zA-Z]*)")
+    var result = r.exec(durationString)
+    const data = {
+      value: result[1],
+      unit: result[2],
+    }
+
+    const validUnits = ["years", "y", "months", "M", "weeks", "w", "days", "d", "hours", "h", "minutes", "m", "seconds", "s", "milliseconds", "ms"];
+    const schema = Joi.object({
+      value: Joi.number().integer().required(),
+      unit: Joi.string().required().valid(...validUnits),
+    });
+    const validated = Joi.attempt(data, schema);
+
+    var ret = moment.duration(result[1], result[2]);
+    console.log(ret.humanize())
+    return ret;
+  
+  }
+
 };
 
 
-class HttpError extends Error {
-  constructor(args) {
-    const { message, status } = args;
-    super(message);
-    this.name = this.constructor.name;
-    this.message = message;
-    this.status = status;
-  }
-}
-
-function ErrorHandlerMiddleware(error, request, response, next) {
-  var httpError;
-  if (error instanceof HttpError) {
-    httpError = error;
-  }
-  else {
-    var message;
-    if (process.env.CONCEAL_ERRORS == true) {
-      message = process.env.CONCEAL_ERRORS_MESSAGE || "Set CONCEAL_ERRORS_MESSAGE for custom message";
-      console.error(error);
-    }
-    else {
-      message = error.message;
-    }
-    const errorArgs = {
-      message,
-      status: "500",
-    };
-    httpError = new HttpError(errorArgs);
-  }
-
-  return response.status(httpError.status).json({error: httpError.message})
-
-}
+//class HttpError extends Error {
+//  constructor(args) {
+//    const { message, status } = args;
+//    super(message);
+//    this.name = this.constructor.name;
+//    this.message = message;
+//    this.status = status;
+//  }
+//}
+//
+//function ErrorHandlerMiddleware(error, request, response, next) {
+//  var httpError;
+//  if (error instanceof HttpError) {
+//    httpError = error;
+//  }
+//  else {
+//    var message;
+//    if (process.env.CONCEAL_ERRORS == true) {
+//      message = process.env.CONCEAL_ERRORS_MESSAGE || "Set CONCEAL_ERRORS_MESSAGE for custom message";
+//      console.error(error);
+//    }
+//    else {
+//      message = error.message;
+//    }
+//    const errorArgs = {
+//      message,
+//      status: "500",
+//    };
+//    httpError = new HttpError(errorArgs);
+//  }
+//
+//  return response.status(httpError.status).json({error: httpError.message})
+//
+//}
 
 
 

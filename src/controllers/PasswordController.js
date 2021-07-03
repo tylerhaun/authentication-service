@@ -118,30 +118,14 @@ class PasswordController extends AbstractController {
 
     const hash = await utils.hashPassword(validated.password);
 
-    const passwordCreateArgs = {
-      hash,
-      userId,
-    }
 
     await this._checkDuplicatePassword({userId, hash});
     await this._updateExistingPassword({userId});
 
-    //const existingPasswordQuery = {
-    //  where: {
-    //    userId,
-    //    deactivatedAt: null
-    //  }
-    //};
-    //const existingPassword = await this.model.findOne(existingPasswordQuery);
-    //console.log("existingPassword", existingPassword);
-    //if (existingPassword) {
-    //  const values = {
-    //    deactivatedAt: moment().format()
-    //  };
-    //  const updateResult = await this.model.updateOne(values, existingPasswordQuery);
-    //  console.log("updateResult", updateResult);
-    //}
-
+    const passwordCreateArgs = {
+      hash,
+      userId,
+    }
     console.log("passwordCreateArgs", passwordCreateArgs);
     const createdPassword = await super.create(passwordCreateArgs);
     console.log("createdPassword", createdPassword);
@@ -171,31 +155,31 @@ class PasswordController extends AbstractController {
   }
 
   //TODO put in utils
-  formatDuration(durationString) {
+  //formatDuration(durationString) {
 
-    if (!(typeof myVar === 'string' || myVar instanceof String)) {
-      throw new Error("must be a string");
-    }
+  //  if (!(typeof myVar === 'string' || myVar instanceof String)) {
+  //    throw new Error("must be a string");
+  //  }
 
-    var r = new RegExp("([0-9]*)([a-zA-Z]*)")
-    var result = r.exec(durationString)
-    const data = {
-      value: result[1],
-      unit: result[2],
-    }
+  //  var r = new RegExp("([0-9]*)([a-zA-Z]*)")
+  //  var result = r.exec(durationString)
+  //  const data = {
+  //    value: result[1],
+  //    unit: result[2],
+  //  }
 
-    const validUnits = ["years", "y", "months", "M", "weeks", "w", "days", "d", "hours", "h", "minutes", "m", "seconds", "s", "milliseconds", "ms"];
-    const schema = Joi.object({
-      value: Joi.number().integer().required(),
-      unit: Joi.string().required().valid(...validUnits),
-    });
-    const validated = Joi.attempt(data, schema);
+  //  const validUnits = ["years", "y", "months", "M", "weeks", "w", "days", "d", "hours", "h", "minutes", "m", "seconds", "s", "milliseconds", "ms"];
+  //  const schema = Joi.object({
+  //    value: Joi.number().integer().required(),
+  //    unit: Joi.string().required().valid(...validUnits),
+  //  });
+  //  const validated = Joi.attempt(data, schema);
 
-    var ret = moment.duration(result[1], result[2]);
-    console.log(ret.humanize())
-    return ret;
-  
-  }
+  //  var ret = moment.duration(result[1], result[2]);
+  //  console.log(ret.humanize())
+  //  return ret;
+  //
+  //}
 
   async checkExpired(query) {
 
@@ -208,7 +192,7 @@ class PasswordController extends AbstractController {
 
     const password = await this.findCurrent(validated);
 
-    const duration = this.formatDuration(validated.expiry || defaultExpiry);
+    const duration = utils.formatDuration(validated.expiry || defaultExpiry);
 
     if (moment(password.createdAt).add(duration) < moment()) {
       throw new Error("Password is expired.  Please update to continue");

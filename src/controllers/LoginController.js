@@ -6,6 +6,7 @@ const utils = require("../utils");
 const db = require("../models")
 
 import AbstractController from "./AbstractController";
+import AccessTokenController from "./AccessTokenController";
 import UserController from "./UserController";
 import PasswordController from "./PasswordController";
 import {default as LoginChallengeController, challengeTypes}  from "./LoginChallengeController";
@@ -27,6 +28,7 @@ class LoginController extends AbstractController {
 
     const schema = Joi.object({
       username: Joi.string().required(),
+      accessToken: Joi.string(),
       ipAddress: Joi.string().required(),
       userAgent: Joi.string().required(),
       challenges: Joi.array().items(Joi.string().valid(...challengeTypes)).default(["password"]),
@@ -62,6 +64,13 @@ class LoginController extends AbstractController {
     };
     console.log("createLoginArgs", createLoginArgs);
     const createdLogin = await super.create(createLoginArgs);
+
+    if (validated.accessToken) {
+      const accessTokenController = new AccessTokenController();
+      const result = await accessTokenController.redeem({userId: user.id, code: validated.accessToken})
+      const token = await utils.signJwtToken({user: {id: user.id}});
+      return {token};
+    }
 
 
     const loginChallengeController = new LoginChallengeController();

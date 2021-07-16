@@ -1,5 +1,6 @@
 import HttpError from "../http-errors";
 const utils = require("../utils")
+const logger = require("../Logger");
 
 
 class AbstractController {
@@ -9,6 +10,8 @@ class AbstractController {
     if (!this.model) {
       throw new Error("_getModel must return a sequelize model");
     }
+    const className = "AbstractController";
+    this.logger = logger.child({class: `${this.constructor.name}.${className}`})
   }
 
   _getModel() {
@@ -16,7 +19,8 @@ class AbstractController {
   }
 
   async create(data) {
-    console.log(this.constructor.name, "AbstractController.create()");
+    this.logger.log({method: "create"})
+    //console.log(this.constructor.name, "AbstractController.create()");
     if (Array.isArray(data)) {
       return this.bulkCreate(data);
     }
@@ -25,13 +29,15 @@ class AbstractController {
   }
 
   async bulkCreate(data) {
-    console.log(this.constructor.name, "AbstractController.bulkCreate()");
+    this.logger.log({method: "bulkCreate"})
+    //console.log(this.constructor.name, "AbstractController.bulkCreate()");
     const result = await this.model.bulkCreate(data);
     return result.map(r => r.get({plain:true}));
   }
 
   async find(query) {
-    console.log(this.constructor.name, "AbstractController.find()");
+    this.logger.log({method: "find"})
+    //console.log(this.constructor.name, "AbstractController.find()");
     const paginationParams = utils.parsePaginationParams(query);
     const options = {
       where: query,
@@ -41,7 +47,8 @@ class AbstractController {
   }
 
   async findOne(query, options) {
-    console.log(this.constructor.name, "AbstractController.findOne()");
+    this.logger.log({method: "findOne"})
+    //console.log(this.constructor.name, "AbstractController.findOne()");
     options = options || {};
     const sequelizeOptions = {
       where: query,
@@ -55,7 +62,8 @@ class AbstractController {
   }
 
   async findById(query) {
-    console.log(this.constructor.name, "AbstractController.findById()");
+    this.logger.log({method: "findById"})
+    //console.log(this.constructor.name, "AbstractController.findById()");
     const id = query.id;
     const options = {
       where: {
@@ -66,7 +74,8 @@ class AbstractController {
   }
 
   async update(query, data) {
-    console.log(this.constructor.name, "AbstractController.update()", query, data);
+    this.logger.log({method: "update"})
+    //console.log(this.constructor.name, "AbstractController.update()", query, data);
     const id = query.id;
     const options = {
       where: {
@@ -79,7 +88,8 @@ class AbstractController {
   }
 
   async delete(query) {
-    console.log(this.constructor.name, "AbstractController.delete()");
+    this.logger.log({method: "delete"})
+    //console.log(this.constructor.name, "AbstractController.delete()");
     const id = query.id;
     if (!id) {
       throw new Error("Missing id in delete");

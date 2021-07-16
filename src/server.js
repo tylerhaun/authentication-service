@@ -5,9 +5,44 @@ const express = require("express");
 
 import { errorHandlerMiddleware } from "./http-errors";
 
-const sequelize = require("./sequelize");
+const logger = require("./Logger");
 
 
+
+//const Transport = require('winston-transport');
+//
+//class CustomConsoleTransport extends Transport {
+//  constructor(opts) {
+//    super(opts);
+//    }
+//
+//  log(info, callback) {
+//    setImmediate(() => {
+//      this.emit('logged', info);
+//    });
+//    console.log(JSON.stringify(info));
+//    callback();
+//  }
+//};
+//      
+//
+//
+//const logger = winston.createLogger({
+//  level: 'info',
+//  format: winston.format.json(),
+//  defaultMeta: {
+//    level: "info",
+//    service: "authentication-service",
+//  },
+//  transports: [
+//    //new winston.transports.Console({
+//    //  format: winston.format.simple(),
+//    //})
+//    new CustomConsoleTransport({
+//      //format: winston.format.simple(),
+//    })
+//  ],
+//});
 
 
 
@@ -22,7 +57,15 @@ class Main {
     const app = express();
 
     app.use(function(request, response, next) {
-      console.log(Date.now(), request.ip, request.method, request.path, request.headers);
+      const requestData = {
+        timestamp: Date.now(),
+        ip: request.ip,
+        method: request.method,
+        path: request.path,
+        headers: request.headers
+      };
+      //console.log();
+      logger.log({message: "requestLogger", data: requestData})
       return next();
     })
 

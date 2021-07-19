@@ -19,13 +19,10 @@ module.exports = function(sequelize) {
     emailAddressId: {
       type: DataTypes.STRING,
     },
-    provider: {
+    code: {
       type: DataTypes.STRING,
     },
-    //email: {
-    //  type: DataTypes.STRING,
-    //},
-    code: {
+    provider: {
       type: DataTypes.STRING,
     },
     approvedAt: {

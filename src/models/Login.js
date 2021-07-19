@@ -16,6 +16,9 @@ module.exports = function(sequelize) {
     userId: {
       type: DataTypes.STRING,
     },
+    accessTokenId: {
+      type: DataTypes.STRING,
+    },
     succeededAt: {
       type: DataTypes.DATE,
     },

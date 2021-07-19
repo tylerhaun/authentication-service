@@ -21,8 +21,8 @@ module.exports = function(sequelize) {
       type: DataTypes.STRING,
       required: true,
     },
-    verified: {
-      type: DataTypes.BOOLEAN,
+    verifiedAt: {
+      type: DataTypes.DATE,
     },
     isPrimary: {
       type: DataTypes.BOOLEAN,

@@ -140,7 +140,8 @@ class VerificationRequestController extends AbstractController {
   //}
 
   async create(data) {
-    console.log(`${this.constructor.name}.VerificationRequestController.create()`, data);
+    //console.log(`${this.constructor.name}.VerificationRequestController.create()`, data);
+    logger.log({method: "create", data})
 
     const schema = Joi.object({
       //email: Joi.string().required(),

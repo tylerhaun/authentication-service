@@ -108,7 +108,6 @@ class Main {
       .forEach(file => {
         //const nameWithoutExt = path.basename(path.basename(file), path.extname(file));
         const requirePath = `./routes/${file}`;
-        console.log("requiring", file);
         require(requirePath)(app);
     })
 

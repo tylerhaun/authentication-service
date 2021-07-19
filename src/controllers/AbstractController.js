@@ -10,8 +10,9 @@ class AbstractController {
     if (!this.model) {
       throw new Error("_getModel must return a sequelize model");
     }
-    const className = "AbstractController";
-    this.logger = logger.child({class: `${this.constructor.name}.${className}`})
+    //const className = "AbstractController";
+    //this.logger = logger.child({class: `${this.constructor.name}.${className}`})
+    this.logger = logger.child({class: this.constructor.name})
   }
 
   _getModel() {
@@ -19,7 +20,7 @@ class AbstractController {
   }
 
   async create(data) {
-    this.logger.log({method: "create"})
+    this.logger.log({class: "AbstractController", parent: this.constructor.name, method: "create"})
     //console.log(this.constructor.name, "AbstractController.create()");
     if (Array.isArray(data)) {
       return this.bulkCreate(data);
@@ -29,25 +30,26 @@ class AbstractController {
   }
 
   async bulkCreate(data) {
-    this.logger.log({method: "bulkCreate"})
+    this.logger.log({class: "AbstractController", parent: this.constructor.name, method: "bulkCreate"})
     //console.log(this.constructor.name, "AbstractController.bulkCreate()");
     const result = await this.model.bulkCreate(data);
     return result.map(r => r.get({plain:true}));
   }
 
   async find(query) {
-    this.logger.log({method: "find"})
+    this.logger.log({class: "AbstractController", parent: this.constructor.name, method: "find"})
     //console.log(this.constructor.name, "AbstractController.find()");
     const paginationParams = utils.parsePaginationParams(query);
     const options = {
       where: query,
     }
     Object.assign(options, paginationParams);
-    return this.model.findAll(options);
+    const result = await this.model.findAll(options);
+    return result.map(r => r.get({plain:true}));
   }
 
   async findOne(query, options) {
-    this.logger.log({method: "findOne"})
+    this.logger.log({class: "AbstractController", parent: this.constructor.name, method: "findOne"})
     //console.log(this.constructor.name, "AbstractController.findOne()");
     options = options || {};
     const sequelizeOptions = {
@@ -58,11 +60,11 @@ class AbstractController {
       const modelName = this.model.name.replace(/_/g, " ");
       throw new HttpError({message: `${modelName} not found`, status: 404})
     }
-    return record;
+    return record.get({plain:true});
   }
 
   async findById(query) {
-    this.logger.log({method: "findById"})
+    this.logger.log({class: "AbstractController", parent: this.constructor.name, method: "findById"})
     //console.log(this.constructor.name, "AbstractController.findById()");
     const id = query.id;
     const options = {
@@ -74,7 +76,7 @@ class AbstractController {
   }
 
   async update(query, data) {
-    this.logger.log({method: "update"})
+    this.logger.log({class: "AbstractController", parent: this.constructor.name, method: "update"})
     //console.log(this.constructor.name, "AbstractController.update()", query, data);
     const id = query.id;
     const options = {
@@ -88,7 +90,7 @@ class AbstractController {
   }
 
   async delete(query) {
-    this.logger.log({method: "delete"})
+    this.logger.log({class: "AbstractController", parent: this.constructor.name, method: "delete"})
     //console.log(this.constructor.name, "AbstractController.delete()");
     const id = query.id;
     if (!id) {

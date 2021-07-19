@@ -1,4 +1,3 @@
-console.log("In SmsVerificationRequestController");
 const Joi = require("joi");
 const moment = require("moment");
 

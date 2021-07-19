@@ -11,7 +11,6 @@ import AbstractController from "./AbstractController";
 import EmailVerificationRequestController from "./EmailVerificationRequestController";
 
 
-//console.log("VerifiableController", VerifiableController);
 class EmailAddressController extends AbstractController {
 
   constructor() {

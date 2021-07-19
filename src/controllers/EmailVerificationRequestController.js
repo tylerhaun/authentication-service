@@ -1,10 +1,10 @@
-console.log("In EmailVerificationRequestController");
 const Joi = require("joi");
 const moment = require("moment-timezone");
 const handlebars = require("handlebars");
 
 const utils = require("../utils");
 const db = require("../models")
+
 import VerificationRequestController from "./VerificationRequestController";
 
 const { EmailProviderFactory } = require("../EmailProvider");

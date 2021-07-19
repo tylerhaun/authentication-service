@@ -33,9 +33,6 @@ export default class AuthorizedIpAddressChallengeStrategy extends LoginChallenge
     }
 
     const loginController = new LoginController();
-    console.log("loginController", loginController);
-    const t = await loginController.model.findOne();
-    console.log("t", t);
     const login = await loginController.findOne({id: challenge.loginId});
     console.log("login", login);
     if (!login.ipAddress) {

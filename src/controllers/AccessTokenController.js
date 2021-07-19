@@ -22,6 +22,8 @@ class AccessTokenController extends AbstractController {
   }
 
   async create(data) {
+    this.logger.log({method: "create", data});
+
     const schema = Joi.object({
       userId: Joi.string().required(),
       maxUses: Joi.number().integer(),
@@ -43,6 +45,7 @@ class AccessTokenController extends AbstractController {
 
 
   async redeem(query) {
+    this.logger.log({method: "redeem", query});
 
     const schema = Joi.object({
       code: Joi.string().regex(/A[a-zA-Z0-9]{40}/).required(),

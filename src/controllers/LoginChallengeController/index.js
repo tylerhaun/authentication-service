@@ -12,6 +12,7 @@ import { LoginChallengeStrategyFactory } from "./strategies";
 import HttpError from "../../http-errors";
 
 const { SmsProviderFactory } = require("../../SmsProvider");
+//const logger = require("../../Logger").child({class: "LoginChallengeController"});
 
 
 const secret = "test";
@@ -24,7 +25,8 @@ class LoginChallengeController extends AbstractController {
   }
 
   async createFromArray(data) {
-    console.log(`${this.constructor.name}.createFromArray()`, data);
+    //console.log(`${this.constructor.name}.createFromArray()`, data);
+    this.logger.log({method: "createFromArray", data})
 
     const schema = Joi.object({
       challenges: Joi.array().items(Joi.string().valid(...challengeTypes)),
@@ -51,7 +53,8 @@ class LoginChallengeController extends AbstractController {
    * returns either next challenge or jwt
    */
   async complete(query, data) {
-    console.log(`${this.constructor.name}.complete()`, {query, data});
+    //console.log(`${this.constructor.name}.complete()`, {query, data});
+    this.logger.log({method: "complete", query, data});
 
     const schema = Joi.object({
       query: Joi.object({
@@ -64,7 +67,8 @@ class LoginChallengeController extends AbstractController {
     const validated = Joi.attempt({query, data}, schema);
 
     const challenge = await this.findOne({id: validated.query.id});
-    console.log("challenge", challenge);
+    //console.log("challenge", challenge);
+    this.logger.log({challenge});
     //const nextChallenge = await this.getNextChallenge({loginId: challenge.loginId});
     //if (challenge.id != nextChallenge.id) {
     //  throw new Error("Challenge out of order");
@@ -73,7 +77,8 @@ class LoginChallengeController extends AbstractController {
     await this._completeChallenge(challenge, validated.data.code);
     //const runResult = this.run({loginId: challenge.loginId})
     const runResult = await this.run({loginId: challenge.loginId})
-    console.log("runResult", runResult);
+    //console.log("runResult", runResult);
+    this.logger.log({runResult});
 
     return runResult;
     //////////////////////////////////////////////
@@ -146,7 +151,8 @@ class LoginChallengeController extends AbstractController {
    * iterate through any non user input challenges and return first challenge that requires user input
    */
   async run(data) {
-    console.log(`${this.constructor.name}.run()`, data);
+    //console.log(`${this.constructor.name}.run()`, data);
+    this.logger.log({method: "run", data});
 
     const schema = Joi.object({
       loginId: Joi.string().required(),
@@ -203,7 +209,8 @@ class LoginChallengeController extends AbstractController {
   //}
 
   async getNextChallenge(query) {
-    console.log(`${this.constructor.name}.getNextChallenge()`, query);
+    //console.log(`${this.constructor.name}.getNextChallenge()`, query);
+    this.logger.log({method: "getNextChallenge", query});
 
     const schema = Joi.object({
       loginId: Joi.string().required(),
@@ -229,7 +236,8 @@ class LoginChallengeController extends AbstractController {
   }
 
   _getNextChallenge(challenges) {
-    console.log(`${this.constructor.name}._getNextChallenge()`);
+    //console.log(`${this.constructor.name}._getNextChallenge()`);
+    this.logger.log({method: "_getNextChallenge"});
 
     const indices = challenges.map(challenge => challenge.index)
     const nextIndex = Math.min.apply(null, indices);
@@ -239,7 +247,8 @@ class LoginChallengeController extends AbstractController {
   }
 
   async startChallenge(data) {
-    console.log(`${this.constructor.name}.startChallenge()`, data);
+    //console.log(`${this.constructor.name}.startChallenge()`, data);
+    this.logger.log({method: "startChallenge", data});
 
     const schema = Joi.object({
       challengeId: Joi.string().required(),
@@ -256,6 +265,7 @@ class LoginChallengeController extends AbstractController {
   }
 
   async _startChallenge(challenge) {
+    this.logger.log({method: "_startChallenge"});
 
     const loginChallengeStrategyFactory = new LoginChallengeStrategyFactory();
     const challengeStrategy = loginChallengeStrategyFactory.get(challenge.type);
@@ -265,7 +275,8 @@ class LoginChallengeController extends AbstractController {
   }
 
   async completeChallenge(data) {
-    console.log(`${this.constructor.name}.completeChallenge()`, data);
+    //console.log(`${this.constructor.name}.completeChallenge()`, data);
+    this.logger.log({method: "completeChallenge", data});
 
     const schema = Joi.object({
       challengeId: Joi.string().required(),
@@ -279,7 +290,8 @@ class LoginChallengeController extends AbstractController {
   }
 
   async _completeChallenge(challenge, code) {
-    console.log(`${this.constructor.name}._completeChallenge()`, {challenge, code});
+    this.logger.log({method: "_completeChallenge", challenge, code})
+    //console.log(`${this.constructor.name}._completeChallenge()`, {challenge, code});
 
     const loginChallengeStrategyFactory = new LoginChallengeStrategyFactory();
     const loginChallengeStrategy = loginChallengeStrategyFactory.get(challenge.type)
@@ -299,8 +311,9 @@ class LoginChallengeController extends AbstractController {
   }
 
   async _markComplete(id) {
+    this.logger.log({method: "_markComplete"});
 
-    return  await this.update({
+    return await this.update({
       id,
     }, {
       completedAt: moment()

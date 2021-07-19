@@ -1,5 +1,4 @@
 const Joi = require("joi");
-const jwt = require("jsonwebtoken");
 const moment = require("moment");
 
 const utils = require("../utils");
@@ -13,8 +12,7 @@ import {default as LoginChallengeController, challengeTypes}  from "./LoginChall
 import HttpError from "../http-errors";
 
 const { SmsProviderFactory } = require("../SmsProvider");
-
-console.log("challengeTypes", challengeTypes);
+const logger = require("../Logger").child({class: "LoginController"});
 
 
 class LoginController extends AbstractController {
@@ -24,7 +22,8 @@ class LoginController extends AbstractController {
   }
 
   async create(data) {
-    console.log(`${this.constructor.name}.create()`, data);
+    //console.log(`${this.constructor.name}.create()`, data);
+    logger.log({method: "create", data})
 
     const schema = Joi.object({
       username: Joi.string().required(),
@@ -34,8 +33,8 @@ class LoginController extends AbstractController {
       challenges: Joi.array().items(Joi.string().valid(...challengeTypes)).default(["password"]),
     });
     const validated = Joi.attempt(data, schema);
-    console.log("validated", validated);
-
+    //console.log("validated", validated);
+    logger.log({validated});
 
     validated.challenges.push("ipAddress");
     validated.challenges.push("device");
@@ -47,7 +46,8 @@ class LoginController extends AbstractController {
         username: validated.username,
       }
     })
-    console.log("user", user);
+    //console.log("user", user);
+    logger.log({user});
     if (!user) {
       throw new HttpError({message: "User does not exist", status: 400});
     }
@@ -62,7 +62,8 @@ class LoginController extends AbstractController {
       ipAddress: validated.ipAddress,
       userAgent: validated.userAgent,
     };
-    console.log("createLoginArgs", createLoginArgs);
+    //console.log("createLoginArgs", createLoginArgs);
+    logger.log({createLoginArgs});
     const createdLogin = await super.create(createLoginArgs);
 
     //if (validated.accessToken) {
@@ -82,6 +83,7 @@ class LoginController extends AbstractController {
     };
     const createdChallenges = await loginChallengeController.createFromArray(createChallengesArgs)
     console.log("createdChallenges", createdChallenges);
+    logger.log({createdChallenges});
     //const nextChallenge = createdChallenges[0];
     //console.log("nextChallenge", nextChallenge);
     //await loginChallengeController.startChallenge({challengeId: nextChallenge.id});
@@ -94,13 +96,14 @@ class LoginController extends AbstractController {
 
 
   async loginWithPassword(data) {
-    console.log(`${this.constructor.name}.loginWithPassword()`, data);
+    //console.log(`${this.constructor.name}.loginWithPassword()`, data);
+    logger.log({method: "loginWithPassword", data})
 
     const schema = Joi.object({
       username: Joi.string().required(),
       password: Joi.string().required(),
       ipAddress: Joi.string(),
-      device: Joi.string(),
+      userAgent: Joi.string(),
       challenges: Joi.array().items(Joi.string().valid(...challengeTypes)).default(["password"]),
     });
     const validated = Joi.attempt(data, schema);

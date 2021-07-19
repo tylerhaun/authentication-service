@@ -438,26 +438,28 @@ describe("API", () => {
 
     describe("Access Token", function() {
       it("should create an access token", async function() {
+        const expiresAt = new Date((new Date()).getTime() + 1000 * 60 * 60 * 24).toISOString().slice(0,10);
+        //const expiresAt = new Date((new Date()).getTime() + 86400000).toISOString().slice(0,10);
         const accessTokenData = {
-          userId: globals.userId,
+          userId: context.userId,
           maxUses: 0,
-          expiresAt: "2021-07-16",
+          expiresAt,
         };
         const response = await request.post(`/access-tokens`).send(accessTokenData).expect(200);
         console.log("response.body", response.body)
-        globals.accessToken = response.body.code;
+        context.accessToken = response.body.code;
       
       })
       it("should login with access token", async function() {
 
         const loginData = {
-          username: globals.email,
-          challenges: ["password"],
-          accessToken: globals.accessToken,
-          ipAddress: ip,
-          userAgent: ua,
+          username: context.email,
+          //challenges: ["accessToken"],
+          accessToken: context.accessToken,
+          ipAddress: context.ip,
+          userAgent: context.ua,
         };
-        const response = await request.post("/login").send(loginData).expect(200);
+        const response = await request.post("/loginWithAccessToken").send(loginData).expect(200);
         console.log("response.body", response.body)
         console.log("token", response.body.token);
       
@@ -467,24 +469,24 @@ describe("API", () => {
     describe("One time password", function() {
       it("should create a one time password", async function() {
         const otpData = {
-          userId: globals.userId,
+          userId: context.userId,
           maxUses: 0,
         };
         const response = await request.post(`/one-time-passwords`).send(otpData).expect(200);
         console.log("response.body", response.body)
-        globals.otp = response.body.code;
+        context.otp = response.body.code;
         
       })
       it("should login with one time password", async function() {
 
         const loginData = {
-          username: globals.email,
-          challenges: ["password"],
-          accessToken: globals.otp,
-          ipAddress: ip,
-          userAgent: ua,
+          username: context.email,
+          //challenges: ["accessToken"],
+          accessToken: context.otp,
+          ipAddress: context.ip,
+          userAgent: context.ua,
         };
-        const response = await request.post("/login").send(loginData).expect(200);
+        const response = await request.post("/loginWithAccessToken").send(loginData).expect(200);
         console.log("response.body", response.body)
         console.log("token", response.body.token);
         
@@ -492,13 +494,14 @@ describe("API", () => {
       it("should fail login second time with one time password", async function() {
 
         const loginData = {
-          username: globals.email,
-          challenges: ["password"],
-          accessToken: globals.otp,
-          ipAddress: ip,
-          userAgent: ua,
+          username: context.email,
+          //challenges: ["accessToken"],
+          accessToken: context.otp,
+          ipAddress: context.ip,
+          userAgent: context.ua,
         };
-        const response = await request.post("/login").send(loginData).expect(401);
+        console.log("loginData", loginData);
+        const response = await request.post("/loginWithAccessToken").send(loginData).expect(401);
         console.log("response.body", response.body)
         console.log("token", response.body.token);
         

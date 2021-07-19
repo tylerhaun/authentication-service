@@ -3,6 +3,7 @@ import SmsChallengeStrategy from "./SmsChallengeStrategy";
 //import EmailChallengeStrategy from "./EmailChallengeStrategy";
 import AuthorizedDeviceChallengeStrategy from "./AuthorizedDeviceChallengeStrategy";
 import AuthorizedIpAddressChallengeStrategy from "./AuthorizedIpAddressChallengeStrategy";
+import AccessTokenChallengeStrategy from "./AccessTokenChallengeStrategy";
 
 
 export class LoginChallengeStrategyFactory {
@@ -18,6 +19,8 @@ export class LoginChallengeStrategyFactory {
         return new AuthorizedDeviceChallengeStrategy();
       case "ipAddress":
         return new AuthorizedIpAddressChallengeStrategy();
+      case "accessToken":
+        return new AccessTokenChallengeStrategy();
       default:
         throw new Error("Invalid login challenge strategy type: " + type)
     }

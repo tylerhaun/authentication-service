@@ -1,11 +1,11 @@
 import { LoginChallengeStrategy } from "./LoginChallengeStrategy"
-import PasswordController from "../../PasswordController";
+import AccessTokenController from "../../AccessTokenController";
 
 const Joi = require("joi");
 const utils = require("../../../utils");
 
 
-export default class PasswordChallengeStrategy extends LoginChallengeStrategy {
+export default class AccessTokenChallengeStrategy extends LoginChallengeStrategy {
 
   async start(challenge) {
     console.log(`${this.constructor.name}.start()`, challenge);
@@ -23,15 +23,18 @@ export default class PasswordChallengeStrategy extends LoginChallengeStrategy {
 
     const userId = validated.challenge.userId;
 
-    const passwordController = new PasswordController();
-    const password = await passwordController.findCurrent({userId: validated.challenge.userId})
-    console.log({password});
+    const accessTokenController = new AccessTokenController();
+    //const accessTokenQuery = {
+    //  userId,
+    //  code: validated.code,
+    //};
+    //console.log("accesTokenQuery", accessTokenQuery);
+    //const accessToken = await accessTokenController.findOne(accessTokenQuery);
+    //console.log("accessToken", accessToken);
+    const result = await accessTokenController.redeem({userId, code: validated.code});
 
-    const result = await utils.comparePassword(validated.code, password.hash);
-    //const result = await utils.comparePassword("bad", password.hash);
     console.log({result})
-
-    const success = result;
+    const success = !!result;
     return {success};
 
   }

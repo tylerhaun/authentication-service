@@ -7,6 +7,7 @@ const utils = require("../../utils");
 const db = require("../../models")
 
 import AbstractController from "../AbstractController";
+import LoginController from "../LoginController";
 import { LoginChallengeStrategyFactory } from "./strategies";
 import HttpError from "../../http-errors";
 
@@ -14,7 +15,7 @@ const { SmsProviderFactory } = require("../../SmsProvider");
 
 
 const secret = "test";
-export const challengeTypes = ["password", "sms", "email", "ipAddress", "device"];
+export const challengeTypes = ["password", "sms", "email", "ipAddress", "device", "accessToken"];
 
 class LoginChallengeController extends AbstractController {
 
@@ -188,8 +189,10 @@ class LoginChallengeController extends AbstractController {
     }
 
     // no more challenges
-    const token = await utils.signJwtToken({user: {id: nextChallenge.userId}});
-    return {token};
+    const loginController = new LoginController();
+    return loginController.succeedLogin({loginId: validated.loginId});
+    //const token = await utils.signJwtToken({user: {id: nextChallenge.userId}});
+    //return {token};
   }
 
   //async runAndGetNextUserInputChallenge(challenges) {
@@ -285,8 +288,9 @@ class LoginChallengeController extends AbstractController {
       challenge,
       code,
     })
+    this.logger.log({result})
 
-    if (result == true) {
+    if (result.success == true) {
       await this._markComplete(challenge.id);
     }
 

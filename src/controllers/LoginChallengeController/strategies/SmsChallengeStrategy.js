@@ -50,7 +50,8 @@ export default class SmsChallengeStrategy extends LoginChallengeStrategy {
     console.log("svr", svr);
 
     console.log(validated.code, svr.code);
-    return validated.code == svr.code;
+    const success = validated.code == svr.code;
+    return {success};
   
   }
 }

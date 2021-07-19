@@ -25,11 +25,7 @@ module.exports = function(sequelize) {
     code: {
       type: DataTypes.STRING,
     },
-    //type: {
-    //  type: DataTypes.ENUM(["sms", "email"]),
-    //},
     provider: {
-      //type: DataTypes.ENUM(["twilio", ""]),
       type: DataTypes.STRING,
     },
     externalId: {

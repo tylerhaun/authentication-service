@@ -1,10 +1,9 @@
-console.log("In VerificationRequestController");
 const Joi = require("joi");
 const moment = require("moment");
 
 const utils = require("../utils");
 const db = require("../models")
-const logger = require("../Logger").child({class: "VerificationRequestController"});
+//const logger = require("../Logger").child({class: "VerificationRequestController"});
 
 import AbstractController from "./AbstractController";
 
@@ -33,11 +32,9 @@ class VerificationRequestController extends AbstractController {
   //}
 
   async create(data) {
-    //console.log(`${this.constructor.name}.VerificationRequestController.create()`, data);
-    logger.log({method: "create", data})
+    this.logger.log({method: "create", data})
 
     const schema = Joi.object({
-      //email: Joi.string().required(),
       userId: Joi.string().required(),
       emailAddressId: Joi.string(),
       phoneNumberId: Joi.string(),
@@ -56,15 +53,13 @@ class VerificationRequestController extends AbstractController {
     const user = await userController.findOne({
       id: validated.userId,
     });
-    //console.log("user", user);
-    logger.log({user});
+    this.logger.log({user});
 
     const code = validated.code || utils.randomString(6);
 
     const sendArgs = {code, user};
     const sendResult = await this._send(sendArgs);
-    //console.log("sendResult", sendResult);
-    logger.log({sendResult});
+    this.logger.log({sendResult});
 
 
     const expiration = validated.expiration ? moment(validated.expiration) : moment().add(1, "minute");
@@ -75,18 +70,16 @@ class VerificationRequestController extends AbstractController {
       externalId: sendResult.messageId,
       expiration,
     };
-    //console.log("vrCreateArgs", vrCreateArgs);
-    logger.log({vrCreateArgs});
+    this.logger.log({vrCreateArgs});
     const createdVr = await super.create(vrCreateArgs);
-    //console.log("createdVr", createdVr);
-    logger.log({createdVr});
+    this.logger.log({createdVr});
 
     return createdVr;
 
   }
 
   async _assertCreateRecentLimit(query, limit) {
-    console.log(`${this.constructor.name}._assertCreateRecentLimit()`, {query, limit});
+    this.logger.log({method: "_assertCreateRecentLimit", query, limit});
     limit = limit || 2;
 
     const schema = Joi.object({
@@ -101,7 +94,7 @@ class VerificationRequestController extends AbstractController {
         [Symbol.for("gt")]: moment().subtract(1, "minute")
       }
     })
-    console.log("recentEvrs", recentEvrs);
+    this.logger.log({recentEvrs});
     if (recentEvrs.length > limit) {
       throw new Error("Too many requests.  Please try again later");
     }
@@ -110,7 +103,7 @@ class VerificationRequestController extends AbstractController {
 
 
   async approve(data) {
-    console.log(`${this.constructor.name}.approve()`, data);
+    this.logger.log({method: "approve", data});
 
     const schema = Joi.object({
       id: Joi.string().required(),
@@ -119,7 +112,7 @@ class VerificationRequestController extends AbstractController {
     const validated = Joi.attempt(data, schema);
 
     const evr = await this._getAndAssertApproveExpiration({id: validated.id, userId: validated.userId})
-    console.log("evr", evr);
+    this.logger.log({evr});
 
     const updateEvrQuery = {
       id: evr.id
@@ -127,31 +120,30 @@ class VerificationRequestController extends AbstractController {
     const updateEvrData = {
       approvedAt: moment(),
     };
-    console.log({updateEvrQuery, updateEvrData});
+    this.logger.log({updateEvrQuery, updateEvrData});
     const updateResult = await this.update(updateEvrQuery, updateEvrData)
-    console.log("updateResult", updateResult);
+    this.logger.log({updateResult});
     const updatedEvr = await this.find(updateEvrQuery);
-    console.log("updatedEvr", updatedEvr);
+    this.logger.log({updatedEvr});
     return updatedEvr;
 
   }
 
   async _getAndAssertApproveExpiration(query) {
-    console.log(`${this.constructor.name}._getAndAssertApproveExpiration()`, query);
+    this.logger.log({method: "_getAndAssertApproveExpiration", query});
 
     const vrFindArgs = {
       id: query.id,
       userId: query.userId,
-      //approvedAt: null,
     };
-    console.log("vrFindArgs", vrFindArgs);
+    this.logger.log({vrFindArgs});
     const vrs = await this.find(vrFindArgs)
-    console.log("vrs", vrs);
+    this.logger.log({vrs});
     if (vrs.length == 0) {
       throw new Error("Invalid code");
     }
     const activeVrs = vrs.filter(vr => moment(vr.createdAt) > moment().subtract(1, "minute"))
-    console.log("activeVrs", activeVrs);
+    this.logger.log({activeVrs});
     if (activeVrs.length == 0 && vrs.length > 0) {
       throw new Error("Verification request has expired");
     }
@@ -159,14 +151,13 @@ class VerificationRequestController extends AbstractController {
     if (vr.approvedAt != null) {
       throw new Error("Code has already been used");
     }
-    console.log("vr", vr);
+    this.logger.log({vr});
     return vr;
 
   }
 
 }
 
-//module.exports = EmailVerificationRequestController;
 export default VerificationRequestController;
 
 

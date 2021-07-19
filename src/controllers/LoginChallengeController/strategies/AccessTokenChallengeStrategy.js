@@ -24,13 +24,6 @@ export default class AccessTokenChallengeStrategy extends LoginChallengeStrategy
     const userId = validated.challenge.userId;
 
     const accessTokenController = new AccessTokenController();
-    //const accessTokenQuery = {
-    //  userId,
-    //  code: validated.code,
-    //};
-    //console.log("accesTokenQuery", accessTokenQuery);
-    //const accessToken = await accessTokenController.findOne(accessTokenQuery);
-    //console.log("accessToken", accessToken);
     const result = await accessTokenController.redeem({userId, code: validated.code});
 
     console.log({result})

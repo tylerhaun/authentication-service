@@ -12,7 +12,7 @@ import {default as LoginChallengeController, challengeTypes}  from "./LoginChall
 import HttpError from "../http-errors";
 
 const { SmsProviderFactory } = require("../SmsProvider");
-const logger = require("../Logger").child({class: "LoginController"});
+//const logger = require("../Logger").child({class: "LoginController"});
 
 
 class LoginController extends AbstractController {
@@ -22,19 +22,16 @@ class LoginController extends AbstractController {
   }
 
   async create(data) {
-    //console.log(`${this.constructor.name}.create()`, data);
-    logger.log({method: "create", data})
+    this.logger.log({method: "create", data})
 
     const schema = Joi.object({
       username: Joi.string().required(),
-      //accessToken: Joi.string(),
       ipAddress: Joi.string().required(),
       userAgent: Joi.string().required(),
       challenges: Joi.array().items(Joi.string().valid(...challengeTypes)).default(["password"]),
     });
     const validated = Joi.attempt(data, schema);
-    //console.log("validated", validated);
-    logger.log({validated});
+    this.logger.log({validated});
 
     validated.challenges.push("ipAddress");
     validated.challenges.push("device");
@@ -46,8 +43,7 @@ class LoginController extends AbstractController {
         username: validated.username,
       }
     })
-    //console.log("user", user);
-    logger.log({user});
+    this.logger.log({user});
     if (!user) {
       throw new HttpError({message: "User does not exist", status: 400});
     }
@@ -62,17 +58,8 @@ class LoginController extends AbstractController {
       ipAddress: validated.ipAddress,
       userAgent: validated.userAgent,
     };
-    //console.log("createLoginArgs", createLoginArgs);
-    logger.log({createLoginArgs});
+    this.logger.log({createLoginArgs});
     const createdLogin = await super.create(createLoginArgs);
-
-    //if (validated.accessToken) {
-    //  const accessTokenController = new AccessTokenController();
-    //  const result = await accessTokenController.redeem({userId: user.id, code: validated.accessToken})
-    //  const token = await utils.signJwtToken({user: {id: user.id}});
-    //  return {token};
-    //}
-
 
     const loginChallengeController = new LoginChallengeController();
 
@@ -82,12 +69,7 @@ class LoginController extends AbstractController {
       loginId: createdLogin.id,
     };
     const createdChallenges = await loginChallengeController.createFromArray(createChallengesArgs)
-    console.log("createdChallenges", createdChallenges);
-    logger.log({createdChallenges});
-    //const nextChallenge = createdChallenges[0];
-    //console.log("nextChallenge", nextChallenge);
-    //await loginChallengeController.startChallenge({challengeId: nextChallenge.id});
-    //const nextChallenge = await loginChallengeController.run({challengeId: createdChallenges[0].id});
+    this.logger.log({createdChallenges});
     const runResult = await loginChallengeController.run({loginId: createdLogin.id});
 
     return runResult;
@@ -96,8 +78,7 @@ class LoginController extends AbstractController {
 
 
   async loginWithPassword(data) {
-    //console.log(`${this.constructor.name}.loginWithPassword()`, data);
-    logger.log({method: "loginWithPassword", data})
+    this.logger.log({method: "loginWithPassword", data})
 
     const schema = Joi.object({
       username: Joi.string().required(),
@@ -107,7 +88,6 @@ class LoginController extends AbstractController {
       challenges: Joi.array().items(Joi.string().valid(...challengeTypes)).default(["password"]),
     });
     const validated = Joi.attempt(data, schema);
-    console.log("validated", validated);
   
     const loginResult = await this.create({
       username: validated.username,
@@ -115,20 +95,19 @@ class LoginController extends AbstractController {
       userAgent: validated.userAgent,
       challenges: ["password"],
     })
-    console.log("loginResult", loginResult);
+    this.logger.log({loginResult});
 
     const challenge = loginResult.challenge;
     const loginChallengeController = new LoginChallengeController();
     const challengeResult = await loginChallengeController.completeChallenge({challengeId: challenge.id, code: validated.password});
 
-    console.log("challengeResult", challengeResult);
+    this.logger.log({challengeResult});
     return challengeResult;
 
   }
 
   async loginWithAccessToken(data) {
-    //console.log(`${this.constructor.name}.loginWithPassword()`, data);
-    logger.log({method: "loginWithAccessToken", data})
+    this.logger.log({method: "loginWithAccessToken", data})
 
     const schema = Joi.object({
       username: Joi.string().required(),
@@ -138,7 +117,6 @@ class LoginController extends AbstractController {
       challenges: Joi.array().items(Joi.string().valid(...challengeTypes)).default(["password"]),
     });
     const validated = Joi.attempt(data, schema);
-    console.log("validated", validated);
   
     const loginResult = await this.create({
       username: validated.username,
@@ -146,15 +124,13 @@ class LoginController extends AbstractController {
       userAgent: validated.userAgent,
       challenges: ["accessToken"],
     })
-    console.log("loginResult", loginResult);
+    this.logger.log({loginResult});
 
     const challenge = loginResult.challenge;
     const loginChallengeController = new LoginChallengeController();
     const challengeResult = await loginChallengeController.completeChallenge({challengeId: challenge.id, code: validated.accessToken});
 
-    //const runResult = await loginChallengeController.run({loginId: createdLogin.id});
-
-    console.log("challenegResult", challengeResult);
+    this.logger.log({challengeResult});
     return challengeResult;
 
   }
@@ -186,32 +162,8 @@ class LoginController extends AbstractController {
   }
 
 
-  //async checkIpAddress(data) {
-  //  console.log(`${this.constructor.name}.checkIpAddress()`, data);
-  //  const schema = Joi.object({
-  //    username: Joi.string().required(),
-  //    password: Joi.string().required(),
-  //    ipAddress: Joi.string(),
-  //    device: Joi.string(),
-  //    challenges: Joi.array().items(Joi.string().valid(...challengeTypes)).default(["password"]),
-  //  });
-  //  const validated = Joi.attempt(data, schema);
-  //  console.log("validated", validated);
-
-  //  // TODO
-  //  // check if ip address is in list of valid login ip addresses
-  //  // need to create table for whitelisted login ip addresses
-  //  // create row when user is created.
-  //  // If a login doesn't match, prompt 2fa (sms, email) to whitelist the current ip address
-  //  
-  //}
-
-
-
 }
 
-//module.exports = LoginController;
+
 export default LoginController;
-
-
 

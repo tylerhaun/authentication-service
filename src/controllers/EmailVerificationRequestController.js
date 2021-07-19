@@ -15,15 +15,12 @@ const emailProviderType = "test"; //TODO put in env
 
 class EmailVerificationRequestController extends VerificationRequestController {
 
-  //_getModel() {
-  //  return db.EmailVerificationRequest;
-  //}
-
   get _providerType() {
     return emailProviderType;
   }
 
   async _send(data) {
+    this.logger.log({method: "_send()", data});
 
     const schema = Joi.object({
       user: Joi.object().required(),
@@ -45,7 +42,7 @@ class EmailVerificationRequestController extends VerificationRequestController {
       text,
     };
     const result = await emailProvider.send(sendEmailArgs);
-    console.log("result", result);
+    this.logger.log({result});
     return result;
 
   

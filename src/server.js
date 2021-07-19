@@ -8,45 +8,6 @@ import { errorHandlerMiddleware } from "./http-errors";
 const logger = require("./Logger");
 
 
-
-//const Transport = require('winston-transport');
-//
-//class CustomConsoleTransport extends Transport {
-//  constructor(opts) {
-//    super(opts);
-//    }
-//
-//  log(info, callback) {
-//    setImmediate(() => {
-//      this.emit('logged', info);
-//    });
-//    console.log(JSON.stringify(info));
-//    callback();
-//  }
-//};
-//      
-//
-//
-//const logger = winston.createLogger({
-//  level: 'info',
-//  format: winston.format.json(),
-//  defaultMeta: {
-//    level: "info",
-//    service: "authentication-service",
-//  },
-//  transports: [
-//    //new winston.transports.Console({
-//    //  format: winston.format.simple(),
-//    //})
-//    new CustomConsoleTransport({
-//      //format: winston.format.simple(),
-//    })
-//  ],
-//});
-
-
-
-
 class Main {
 
   async main() {

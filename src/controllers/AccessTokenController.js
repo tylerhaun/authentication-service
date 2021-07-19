@@ -67,7 +67,7 @@ class AccessTokenController extends AbstractController {
     }, {
       uses: accessToken.uses + 1
     })
-    console.log("updateResult", updateResult);
+    this.logger.log({updateResult});
 
     return updateResult;
 

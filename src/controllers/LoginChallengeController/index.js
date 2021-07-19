@@ -12,7 +12,6 @@ import { LoginChallengeStrategyFactory } from "./strategies";
 import HttpError from "../../http-errors";
 
 const { SmsProviderFactory } = require("../../SmsProvider");
-//const logger = require("../../Logger").child({class: "LoginChallengeController"});
 
 
 const secret = "test";
@@ -25,7 +24,6 @@ class LoginChallengeController extends AbstractController {
   }
 
   async createFromArray(data) {
-    //console.log(`${this.constructor.name}.createFromArray()`, data);
     this.logger.log({method: "createFromArray", data})
 
     const schema = Joi.object({
@@ -53,7 +51,6 @@ class LoginChallengeController extends AbstractController {
    * returns either next challenge or jwt
    */
   async complete(query, data) {
-    //console.log(`${this.constructor.name}.complete()`, {query, data});
     this.logger.log({method: "complete", query, data});
 
     const schema = Joi.object({
@@ -67,122 +64,46 @@ class LoginChallengeController extends AbstractController {
     const validated = Joi.attempt({query, data}, schema);
 
     const challenge = await this.findOne({id: validated.query.id});
-    //console.log("challenge", challenge);
     this.logger.log({challenge});
-    //const nextChallenge = await this.getNextChallenge({loginId: challenge.loginId});
-    //if (challenge.id != nextChallenge.id) {
-    //  throw new Error("Challenge out of order");
-    //}
 
     await this._completeChallenge(challenge, validated.data.code);
-    //const runResult = this.run({loginId: challenge.loginId})
     const runResult = await this.run({loginId: challenge.loginId})
-    //console.log("runResult", runResult);
     this.logger.log({runResult});
 
     return runResult;
-    //////////////////////////////////////////////
-    //const result = await this.completeChallenge(challenge, validated.data.code)
-
-    //if (result == false) {
-    //  throw new HttpError({message: "Challenge failed", status: 401});
-    //}
-
-    ////const nextChallenge = await this.getNextChallenge({loginId: loginChallenge.loginId})
-
-    //if (!nextChallenge) {
-    //  const token = jwt.sign({user: {id: loginChallenge.userId}}, secret, {expiresIn: "1h"})
-    //  console.log("token", token);
-
-    //  return {token};
-    //}
-
-    //const startResult = await this.startChallenge({challengeId: nextChallenge.id});
-
-    //if (startResult.userInput == false) {
-    //  
-    //}
-    //if (startResult.userInput == true) {
-    //  return {nextChallenge};
-    //}
-
-    ////if (nextChallenge) {
-    ////  return {
-    ////    challenge: await this.startChallenge({challengeId: nextChallenge.id})
-    ////  };
-    ////}
-    ////else {
-    ////  const token = jwt.sign({user: {id: loginChallenge.userId}}, secret, {expiresIn: "1h"})
-    ////  console.log("token", token);
-
-    ////  return {token};
-    ////}
 
   }
-
-  //async runChallengesRecursive() {
-
-  //  const schema = Joi.object({
-  //    loginId: Joi.string().required(),
-  //  });
-  //  const validated = Joi.attempt(query, schema);
-
-  //  const nextChallenge = await this.getNextChallenge({loginId: loginChallenge.loginId})
-
-  //  //const nextChallenge = await this.getNextChallenge({loginId: loginChallenge.loginId})
-
-  //  const startResult = await this.startChallenge({challengeId: nextChallenge.id});
-
-  //  if (startResult.userInput == false) {
-  //    
-  //  }
-  //  if (startResult.userInput == true) {
-  //    return {nextChallenge};
-  //  }
-
-  //  const nextChallenge = await this.getNextChallenge({loginId: loginChallenge.loginId})
-
-  //  return this.runChallengesRecursive()
-  //
-  //}
-
 
   /*
    * iterate through any non user input challenges and return first challenge that requires user input
    */
   async run(data) {
-    //console.log(`${this.constructor.name}.run()`, data);
     this.logger.log({method: "run", data});
 
     const schema = Joi.object({
       loginId: Joi.string().required(),
-      //challengeId: Joi.string().required(),
     });
     const validated = Joi.attempt(data, schema);
-
-    //const challenge = await this.findOne({id: validated.challengeId});
-    //console.log("challenge", challenge);
 
     const challenges = await this.find({
       loginId: validated.loginId,
       completedAt: null,
     })
-    //console.log("challenges", challenges);
     var nextChallenge;
     while (challenges.length > 0) {
-      console.log("challenges.length", challenges.length);
+      this.logger.log({"challenges.length": challenges.length});
       nextChallenge = this._getNextChallenge(challenges);
-      console.log("nextChallenge", nextChallenge);
+      this.logger.log({nextChallenge});
       const startResult = await this._startChallenge(nextChallenge);
-      console.log("startResult", startResult);
+      this.logger.log({startResult});
       if (startResult.userInput == true) {
-        console.log("challenge requires user input");
+        this.logger.log({message: "challenge requires user input"});
         return {challenge: nextChallenge};
       }
-      console.log("challenge does not require user input");
+      this.logger.log({message: "challenge does not require user input"});
 
       const completeResult = await this._completeChallenge(nextChallenge);
-      console.log("completeResult", completeResult);
+      this.logger.log({completeResult});
       if (completeResult.success != true) {
         // try challenge resolution
         // if ip address / device fails, give user option to add a new authorized one with mobile phone / email
@@ -190,26 +111,17 @@ class LoginChallengeController extends AbstractController {
       }
 
       const arrayIndex = _.findIndex(challenges, {id: nextChallenge.id})
-      console.log("arrayIndex");
+      this.logger.log({arrayIndex});
       challenges.splice(arrayIndex, 1);
     }
 
     // no more challenges
     const loginController = new LoginController();
     return loginController.succeedLogin({loginId: validated.loginId});
-    //const token = await utils.signJwtToken({user: {id: nextChallenge.userId}});
-    //return {token};
+
   }
 
-  //async runAndGetNextUserInputChallenge(challenges) {
-
-  //  const nextChallenge = this._getNextChallenge(challenges);
-  //  await this.startChallenge(nextChallenge);
-
-  //}
-
   async getNextChallenge(query) {
-    //console.log(`${this.constructor.name}.getNextChallenge()`, query);
     this.logger.log({method: "getNextChallenge", query});
 
     const schema = Joi.object({
@@ -221,22 +133,13 @@ class LoginChallengeController extends AbstractController {
       loginId: query.loginId,
       completedAt: null,
     })
-    console.log("challenges", challenges);
+    this.logger.log({challenges});
 
     return this._getNextChallenge(challenges);
-
-    //const nextIndex = loginChallenge.index + 1;
-    //const indices = loginChallenges.map(challenge => challenge.index)
-    //const nextIndex = Math.min.apply(null, indices);
-    //const nextChallenge = _.find(loginChallenges, {index: nextIndex})
-    //console.log("nextChallenge", nextChallenge);
-
-    //return nextChallenge;
 
   }
 
   _getNextChallenge(challenges) {
-    //console.log(`${this.constructor.name}._getNextChallenge()`);
     this.logger.log({method: "_getNextChallenge"});
 
     const indices = challenges.map(challenge => challenge.index)
@@ -247,7 +150,6 @@ class LoginChallengeController extends AbstractController {
   }
 
   async startChallenge(data) {
-    //console.log(`${this.constructor.name}.startChallenge()`, data);
     this.logger.log({method: "startChallenge", data});
 
     const schema = Joi.object({
@@ -275,7 +177,6 @@ class LoginChallengeController extends AbstractController {
   }
 
   async completeChallenge(data) {
-    //console.log(`${this.constructor.name}.completeChallenge()`, data);
     this.logger.log({method: "completeChallenge", data});
 
     const schema = Joi.object({
@@ -291,7 +192,6 @@ class LoginChallengeController extends AbstractController {
 
   async _completeChallenge(challenge, code) {
     this.logger.log({method: "_completeChallenge", challenge, code})
-    //console.log(`${this.constructor.name}._completeChallenge()`, {challenge, code});
 
     const loginChallengeStrategyFactory = new LoginChallengeStrategyFactory();
     const loginChallengeStrategy = loginChallengeStrategyFactory.get(challenge.type)
@@ -325,129 +225,5 @@ class LoginChallengeController extends AbstractController {
 }
 
 
-//class LoginChallengeStrategyFactory {
-//  get(type) {
-//    switch(type) {
-//      case "password":
-//        return new PasswordChallengeStrategy();
-//      case "sms":
-//        return new SmsChallengeStrategy();
-//      case "email":
-//        return new EmailChallengeStrategy();
-//      default:
-//        throw new Error("Invalid login challenge strategy type: " + type)
-//    }
-//
-//
-//  }
-//}
-//
-//
-//class LoginChallengeStrategy {
-//
-//  async start(challenge) {
-//    return challenge;
-//  }
-//
-//  async complete(data) {
-//    const schema = Joi.object({
-//      challenge: Joi.object(),
-//      code: Joi.string(),
-//    });
-//    return Boolean()
-//  }
-//}
-//
-//
-//class PasswordChallengeStrategy extends LoginChallengeStrategy {
-//
-//  async complete(data) {
-//    console.log("PasswordChallenge.complete()");
-//
-//    const schema = Joi.object({
-//      challenge: Joi.object(),
-//      code: Joi.string(),
-//    });
-//    const validated = Joi.attempt(data, schema);
-//
-//    const userId = validated.challenge.userId;
-//    
-//    const passwordController = new PasswordController();
-//    const password = await passwordController.findCurrent({userId: validated.challenge.userId})
-//    console.log({password});
-//
-//    const result = await utils.comparePassword(validated.code, password.hash);
-//    //const result = await utils.comparePassword("bad", password.hash);
-//    console.log({result})
-//
-//    return result;
-//
-//  }
-//}
-//
-//
-////const SmsVerificationRequestController = require("./SmsVerificationRequestController");
-//import  SmsVerificationRequestController from "./SmsVerificationRequestController";
-//class SmsChallengeStrategy extends LoginChallengeStrategy {
-//
-//  async start(challenge) {
-//    console.log("SmsChallengeStrategy.start()");
-//
-//    const userController = new UserController();
-//    const user = await userController.findOne({id: challenge.userId});
-//    console.log("user", user);
-//
-//    const svrCreateArgs = {
-//      userId: challenge.userId,
-//      //code: Joi.string(),
-//
-//      //to: user.phoneNumber,
-//      //userId: user.id,
-//      //loginChallengeId: challenge.id,
-//    };
-//    console.log("svrCreateArgs", svrCreateArgs);
-//    const smsVerificationRequestController = new SmsVerificationRequestController();
-//    const createdSvr = await smsVerificationRequestController.create(svrCreateArgs);
-//    console.log("createdSvr", createdSvr);
-//
-//    const loginChallengeController = new LoginChallengeController();
-//    const updateResult = await loginChallengeController.update({id: challenge.id}, {smsVerificationRequestId: createdSvr.id});
-//    console.log("updateResult", updateResult);
-//
-//    return challenge;
-//
-//  }
-//
-//  async complete(data) {
-//    console.log("SmsChallengeStrategy.complete()", data);
-//
-//    const schema = Joi.object({
-//      challenge: Joi.object(),
-//      code: Joi.string(),
-//    });
-//    const validated = Joi.attempt(data, schema);
-//
-//    const smsVerificationRequestController = new SmsVerificationRequestController();
-//    const svr = await smsVerificationRequestController.findOne({id: validated.challenge.smsVerificationRequestId});
-//    console.log("svr", svr);
-//
-//    console.log(validated.code, svr.code);
-//    return validated.code == svr.code;
-//  
-//  }
-//}
-//
-//class EmailChallengeStrategy extends LoginChallengeStrategy {
-//  async start() {
-//  
-//  }
-//
-//  async complete() {
-//  
-//  }
-//}
-
-
-//module.exports = LoginChallengeController;
 export default LoginChallengeController;
 

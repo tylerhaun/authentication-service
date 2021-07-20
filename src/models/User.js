@@ -15,6 +15,7 @@ module.exports = function(sequelize) {
     },
     username: {
       type: DataTypes.STRING,
+      unique: true,
     },
     requireSmsVerification: {
       type: DataTypes.BOOLEAN,

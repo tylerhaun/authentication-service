@@ -1,6 +1,7 @@
 const context = require("../context");
+const describeFromFs = require("../describeFromFs");
 
-describe('loading express', function() {
+describeFromFs(__dirname, () => {
   it("should ping", async function() {
     this.timeout(5000);
     const response = await context.request.get("/ping")
@@ -12,3 +13,4 @@ describe('loading express', function() {
       .expect(404);
   });
 });
+

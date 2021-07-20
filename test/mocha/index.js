@@ -39,8 +39,15 @@ after(async () => {
 //      .expect(404);
 //  });
 //});
+
+
 require("./express");
 require("./api/user/create");
+require("./api/user/login");
+require("./api/email-address");
+require("./api/phone-number");
+require("./api/access-token");
+require("./api/one-time-password");
 
 
 //const axiosConfig = {
@@ -130,282 +137,282 @@ describe("API", () => {
     //  })
     //})
 
-    describe("Login", () => {
-      it("should successfully login", async function() {
-        this.timeout(10000);
-        const userData = {
-          username: context.email,
-          challenges: ["password", "sms"],
-          ipAddress: context.ip,
-          userAgent: context.ua,
-        };
-        const response = await request.post("/login").send(userData).expect(200);
-        console.log(response.status)
-        console.log("response.body", response.body);
-        const challenge = response.body.challenge;
-        console.log("challenge", challenge);
+    //describe("Login", () => {
+    //  it("should successfully login", async function() {
+    //    this.timeout(10000);
+    //    const userData = {
+    //      username: context.email,
+    //      challenges: ["password", "sms"],
+    //      ipAddress: context.ip,
+    //      userAgent: context.ua,
+    //    };
+    //    const response = await request.post("/login").send(userData).expect(200);
+    //    console.log(response.status)
+    //    console.log("response.body", response.body);
+    //    const challenge = response.body.challenge;
+    //    console.log("challenge", challenge);
 
 
-        console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 1\n\n\n\n\n\n\n\n")
+    //    console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 1\n\n\n\n\n\n\n\n")
 
-        const eventAwaitterArgs = {
-          eventEmitter: testEventEmitter,
-          event: "sms.sent"
-        };
-        const eventAwaitter = new EventAwaitter(eventAwaitterArgs);
-        eventAwaitter.listen();
-
-
-        const challengeData = {
-          code: context.password,
-        };
-        const response2 = await request.post(`/login-challenges/${challenge.id}/complete`).send(challengeData).expect(200);
-        console.log("response2.body", response2.body)
-        const challenge2 = response2.body.challenge;
-        console.log("challenge2", challenge2);
+    //    const eventAwaitterArgs = {
+    //      eventEmitter: testEventEmitter,
+    //      event: "sms.sent"
+    //    };
+    //    const eventAwaitter = new EventAwaitter(eventAwaitterArgs);
+    //    eventAwaitter.listen();
 
 
-        console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 2\n\n\n\n\n\n\n\n")
-        //console.log("sleeping for code...");
-        //await new Promise(function(resolve, reject) {setTimeout(() => resolve(), 1000)})
-
-        //var smsPromiseResolve;
-        //const smsPromise = new Promise(function(resolve, reject) {
-        //  smsPromiseResolve = resolve;
-        //})
-        //testEventEmitter.on("sms.sent", function(data) { // TODO cleanup listener after event received
-        //  console.log("got event", data);
-        //  return smsPromiseResolve(data);
-        //})
-        //const sentSms = await emailPromise;
-        const sentSms = await eventAwaitter.get();
-        console.log("sentSms", sentSms);
-        const code = sentSms.message.split(" ")[3];
-        console.log("code", code);
-        const challengeData2 = {
-          code,
-        };
-        const response3 = await request.post(`/login-challenges/${challenge2.id}/complete`).send(challengeData2).expect(200);
-        console.log("response3.body", response3.body)
-        const token = response3.body.token;
-        context.token = token;
-        const userId = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()).user.id;
-        console.log("userId", userId)
-        context.userId = userId;
+    //    const challengeData = {
+    //      code: context.password,
+    //    };
+    //    const response2 = await request.post(`/login-challenges/${challenge.id}/complete`).send(challengeData).expect(200);
+    //    console.log("response2.body", response2.body)
+    //    const challenge2 = response2.body.challenge;
+    //    console.log("challenge2", challenge2);
 
 
-      })
+    //    console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 2\n\n\n\n\n\n\n\n")
+    //    //console.log("sleeping for code...");
+    //    //await new Promise(function(resolve, reject) {setTimeout(() => resolve(), 1000)})
 
-      it("should fail login from ip address", async function() {
-        this.timeout(10000);
-        const wrongIp = "192.168.1.2";
-        const userData = {
-          username: context.email,
-          challenges: ["password", "ipAddress"],
-          ipAddress: wrongIp,
-          userAgent: context.ua,
-        };
-        const response = await request.post("/login").send(userData).expect(200);
-        console.log(response.status)
-        console.log("response.body", response.body);
-        const challenge = response.body.challenge;
-        console.log("challenge", challenge);
-
-
-        console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 1\n\n\n\n\n\n\n\n")
-
-
-        const challengeData = {
-          code: context.password,
-        };
-        const response2 = await request.post(`/login-challenges/${challenge.id}/complete`).send(challengeData).expect(401);
-        console.log("response2.body", response2.body)
-        const challenge2 = response2.body.challenge;
-        console.log("challenge2", challenge2);
-
-      })
-
-      it("should fail login from device", async function() {
-        this.timeout(10000);
-        const wrongUa = "Mozilla/5.0 (iPhone; U; CPU iPhone OS 5_1_1 like Mac OS X; en) AppleWebKit/534.46.0 (KHTML, like Gecko) CriOS/19.0.1084.60 Mobile/9B206 Safari/7534.48.3"
-        const userData = {
-          username: context.email,
-          challenges: ["password", "device"],
-          ipAddress: context.ip,
-          userAgent: wrongUa,
-        };
-        const response = await request.post("/login").send(userData).expect(200);
-        console.log(response.status)
-        console.log("response.body", response.body);
-        const challenge = response.body.challenge;
-        console.log("challenge", challenge);
+    //    //var smsPromiseResolve;
+    //    //const smsPromise = new Promise(function(resolve, reject) {
+    //    //  smsPromiseResolve = resolve;
+    //    //})
+    //    //testEventEmitter.on("sms.sent", function(data) { // TODO cleanup listener after event received
+    //    //  console.log("got event", data);
+    //    //  return smsPromiseResolve(data);
+    //    //})
+    //    //const sentSms = await emailPromise;
+    //    const sentSms = await eventAwaitter.get();
+    //    console.log("sentSms", sentSms);
+    //    const code = sentSms.message.split(" ")[3];
+    //    console.log("code", code);
+    //    const challengeData2 = {
+    //      code,
+    //    };
+    //    const response3 = await request.post(`/login-challenges/${challenge2.id}/complete`).send(challengeData2).expect(200);
+    //    console.log("response3.body", response3.body)
+    //    const token = response3.body.token;
+    //    context.token = token;
+    //    const userId = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()).user.id;
+    //    console.log("userId", userId)
+    //    context.userId = userId;
 
 
-        console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 1\n\n\n\n\n\n\n\n")
+    //  })
 
-        const challengeData = {
-          code: context.password,
-        };
-        const response2 = await request.post(`/login-challenges/${challenge.id}/complete`).send(challengeData).expect(401);
-        console.log("response2.body", response2.body)
-        const challenge2 = response2.body.challenge;
-        console.log("challenge2", challenge2);
-
-      })
-
-    })
-
-    describe("Email", function() {
-      it("should create and verify a second email address", async function() {
-
-        const emailAddressData = {
-          userId: context.userId,
-          emailAddress: "test2@test.com",
-          isPrimary: true,
-        };
-        console.log("emailAddressData", emailAddressData);
-        const response = await request.post(`/email-addresses`).send(emailAddressData).expect(200);
-        console.log("response.body", response.body)
-        const emailId = response.body.id;
+    //  it("should fail login from ip address", async function() {
+    //    this.timeout(10000);
+    //    const wrongIp = "192.168.1.2";
+    //    const userData = {
+    //      username: context.email,
+    //      challenges: ["password", "ipAddress"],
+    //      ipAddress: wrongIp,
+    //      userAgent: context.ua,
+    //    };
+    //    const response = await request.post("/login").send(userData).expect(200);
+    //    console.log(response.status)
+    //    console.log("response.body", response.body);
+    //    const challenge = response.body.challenge;
+    //    console.log("challenge", challenge);
 
 
-        const eventAwaitterArgs = {
-          eventEmitter: testEventEmitter,
-          event: "email.sent"
-        };
-        const eventAwaitter = new EventAwaitter(eventAwaitterArgs);
-        eventAwaitter.listen();
+    //    console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 1\n\n\n\n\n\n\n\n")
 
 
-        const response2 = await request.post(`/email-addresses/${emailId}/startVerification`).expect(200);
-        console.log("response2.body", response2.body)
+    //    const challengeData = {
+    //      code: context.password,
+    //    };
+    //    const response2 = await request.post(`/login-challenges/${challenge.id}/complete`).send(challengeData).expect(401);
+    //    console.log("response2.body", response2.body)
+    //    const challenge2 = response2.body.challenge;
+    //    console.log("challenge2", challenge2);
+
+    //  })
+
+    //  it("should fail login from device", async function() {
+    //    this.timeout(10000);
+    //    const wrongUa = "Mozilla/5.0 (iPhone; U; CPU iPhone OS 5_1_1 like Mac OS X; en) AppleWebKit/534.46.0 (KHTML, like Gecko) CriOS/19.0.1084.60 Mobile/9B206 Safari/7534.48.3"
+    //    const userData = {
+    //      username: context.email,
+    //      challenges: ["password", "device"],
+    //      ipAddress: context.ip,
+    //      userAgent: wrongUa,
+    //    };
+    //    const response = await request.post("/login").send(userData).expect(200);
+    //    console.log(response.status)
+    //    console.log("response.body", response.body);
+    //    const challenge = response.body.challenge;
+    //    console.log("challenge", challenge);
 
 
-        const sentEmail = await eventAwaitter.get();
-        console.log("sentEmail", sentEmail);
-        const code = sentEmail.text.split("/").pop();
-        const verifyData = {
-          code,
-          userId: context.userId,
-        };
-        const response3 = await request.post(`/email-addresses/${emailId}/verify`).send(verifyData).expect(200);
-        console.log("response3.body", response3.body)
+    //    console.log("\n\n\n\n\n\n\nCOMPLETING CHALLENGE 1\n\n\n\n\n\n\n\n")
 
-      })
-    })
+    //    const challengeData = {
+    //      code: context.password,
+    //    };
+    //    const response2 = await request.post(`/login-challenges/${challenge.id}/complete`).send(challengeData).expect(401);
+    //    console.log("response2.body", response2.body)
+    //    const challenge2 = response2.body.challenge;
+    //    console.log("challenge2", challenge2);
 
-    describe("PhoneNumber", function() {
-      it("should create and verify a second phone number", async function() {
+    //  })
 
-        const phoneNumberData = {
-          userId: context.userId,
-          phoneNumber: "680-555-5555",
-          isPrimary: true,
-        };
-        console.log("phoneNumberData", phoneNumberData);
-        const response = await request.post(`/phone-numbers`).send(phoneNumberData).expect(200);
-        console.log("response.body", response.body)
-        const phoneNumberId = response.body.id;
+    //})
 
+      //describe("Email", function() {
+      //deit("should create and verify a second email address", async function() {
 
-        const eventAwaitterArgs = {
-          eventEmitter: testEventEmitter,
-          event: "sms.sent"
-        };
-        const eventAwaitter = new EventAwaitter(eventAwaitterArgs);
-        eventAwaitter.listen();
+      //de  const emailAddressData = {
+      //de    userId: context.userId,
+      //de    emailAddress: "test2@test.com",
+      //de    isPrimary: true,
+      //de  };
+      //de  console.log("emailAddressData", emailAddressData);
+      //de  const response = await request.post(`/email-addresses`).send(emailAddressData).expect(200);
+      //de  console.log("response.body", response.body)
+      //de  const emailId = response.body.id;
 
 
-        const response2 = await request.post(`/phone-numbers/${phoneNumberId}/startVerification`).expect(200);
-        console.log("response2.body", response2.body)
+      //de  const eventAwaitterArgs = {
+      //de    eventEmitter: testEventEmitter,
+      //de    event: "email.sent"
+      //de  };
+      //de  const eventAwaitter = new EventAwaitter(eventAwaitterArgs);
+      //de  eventAwaitter.listen();
 
 
-        const sentSms = await eventAwaitter.get();
-        console.log("sentSms", sentSms);
-        const code = sentSms.message.split(" ")[3];
-        const verifyData = {
-          code,
-          userId: context.userId,
-        };
-        const response3 = await request.post(`/phone-numbers/${phoneNumberId}/verify`).send(verifyData).expect(200);
-        console.log("response3.body", response3.body)
+      //de  const response2 = await request.post(`/email-addresses/${emailId}/startVerification`).expect(200);
+      //de  console.log("response2.body", response2.body)
 
 
-        
-      })
-    })
+      //de  const sentEmail = await eventAwaitter.get();
+      //de  console.log("sentEmail", sentEmail);
+      //de  const code = sentEmail.text.split("/").pop();
+      //de  const verifyData = {
+      //de    code,
+      //de    userId: context.userId,
+      //de  };
+      //de  const response3 = await request.post(`/email-addresses/${emailId}/verify`).send(verifyData).expect(200);
+      //de  console.log("response3.body", response3.body)
 
-    describe("Access Token", function() {
-      it("should create an access token", async function() {
-        const expiresAt = new Date((new Date()).getTime() + 1000 * 60 * 60 * 24).toISOString().slice(0,10);
-        //const expiresAt = new Date((new Date()).getTime() + 86400000).toISOString().slice(0,10);
-        const accessTokenData = {
-          userId: context.userId,
-          maxUses: 0,
-          expiresAt,
-        };
-        const response = await request.post(`/access-tokens`).send(accessTokenData).expect(200);
-        console.log("response.body", response.body)
-        context.accessToken = response.body.code;
-      
-      })
-      it("should login with access token", async function() {
+      //de})
+    //})//de
 
-        const loginData = {
-          username: context.email,
-          //challenges: ["accessToken"],
-          accessToken: context.accessToken,
-          ipAddress: context.ip,
-          userAgent: context.ua,
-        };
-        const response = await request.post("/loginWithAccessToken").send(loginData).expect(200);
-        console.log("response.body", response.body)
-        console.log("token", response.body.token);
-      
-      })
-    })
+    //describe("PhoneNumber", function() {
+    //  it("should create and verify a second phone number", async function() {
 
-    describe("One time password", function() {
-      it("should create a one time password", async function() {
-        const otpData = {
-          userId: context.userId,
-          maxUses: 0,
-        };
-        const response = await request.post(`/one-time-passwords`).send(otpData).expect(200);
-        console.log("response.body", response.body)
-        context.otp = response.body.code;
-        
-      })
-      it("should login with one time password", async function() {
+    //    const phoneNumberData = {
+    //      userId: context.userId,
+    //      phoneNumber: "680-555-5555",
+    //      isPrimary: true,
+    //    };
+    //    console.log("phoneNumberData", phoneNumberData);
+    //    const response = await request.post(`/phone-numbers`).send(phoneNumberData).expect(200);
+    //    console.log("response.body", response.body)
+    //    const phoneNumberId = response.body.id;
 
-        const loginData = {
-          username: context.email,
-          //challenges: ["accessToken"],
-          accessToken: context.otp,
-          ipAddress: context.ip,
-          userAgent: context.ua,
-        };
-        const response = await request.post("/loginWithAccessToken").send(loginData).expect(200);
-        console.log("response.body", response.body)
-        console.log("token", response.body.token);
-        
-      })
-      it("should fail login second time with one time password", async function() {
 
-        const loginData = {
-          username: context.email,
-          //challenges: ["accessToken"],
-          accessToken: context.otp,
-          ipAddress: context.ip,
-          userAgent: context.ua,
-        };
-        console.log("loginData", loginData);
-        const response = await request.post("/loginWithAccessToken").send(loginData).expect(401);
-        console.log("response.body", response.body)
-        console.log("token", response.body.token);
-        
-      })
-    })
+    //    const eventAwaitterArgs = {
+    //      eventEmitter: testEventEmitter,
+    //      event: "sms.sent"
+    //    };
+    //    const eventAwaitter = new EventAwaitter(eventAwaitterArgs);
+    //    eventAwaitter.listen();
+
+
+    //    const response2 = await request.post(`/phone-numbers/${phoneNumberId}/startVerification`).expect(200);
+    //    console.log("response2.body", response2.body)
+
+
+    //    const sentSms = await eventAwaitter.get();
+    //    console.log("sentSms", sentSms);
+    //    const code = sentSms.message.split(" ")[3];
+    //    const verifyData = {
+    //      code,
+    //      userId: context.userId,
+    //    };
+    //    const response3 = await request.post(`/phone-numbers/${phoneNumberId}/verify`).send(verifyData).expect(200);
+    //    console.log("response3.body", response3.body)
+
+
+    //    
+    //  })
+    //})
+
+    //describe("Access Token", function() {
+    //  it("should create an access token", async function() {
+    //    const expiresAt = new Date((new Date()).getTime() + 1000 * 60 * 60 * 24).toISOString().slice(0,10);
+    //    //const expiresAt = new Date((new Date()).getTime() + 86400000).toISOString().slice(0,10);
+    //    const accessTokenData = {
+    //      userId: context.userId,
+    //      maxUses: 0,
+    //      expiresAt,
+    //    };
+    //    const response = await request.post(`/access-tokens`).send(accessTokenData).expect(200);
+    //    console.log("response.body", response.body)
+    //    context.accessToken = response.body.code;
+    //  
+    //  })
+    //  it("should login with access token", async function() {
+
+    //    const loginData = {
+    //      username: context.email,
+    //      //challenges: ["accessToken"],
+    //      accessToken: context.accessToken,
+    //      ipAddress: context.ip,
+    //      userAgent: context.ua,
+    //    };
+    //    const response = await request.post("/loginWithAccessToken").send(loginData).expect(200);
+    //    console.log("response.body", response.body)
+    //    console.log("token", response.body.token);
+    //  
+    //  })
+    //})
+
+    //describe("One time password", function() {
+    //  it("should create a one time password", async function() {
+    //    const otpData = {
+    //      userId: context.userId,
+    //      maxUses: 0,
+    //    };
+    //    const response = await request.post(`/one-time-passwords`).send(otpData).expect(200);
+    //    console.log("response.body", response.body)
+    //    context.otp = response.body.code;
+    //    
+    //  })
+    //  it("should login with one time password", async function() {
+
+    //    const loginData = {
+    //      username: context.email,
+    //      //challenges: ["accessToken"],
+    //      accessToken: context.otp,
+    //      ipAddress: context.ip,
+    //      userAgent: context.ua,
+    //    };
+    //    const response = await request.post("/loginWithAccessToken").send(loginData).expect(200);
+    //    console.log("response.body", response.body)
+    //    console.log("token", response.body.token);
+    //    
+    //  })
+    //  it("should fail login second time with one time password", async function() {
+
+    //    const loginData = {
+    //      username: context.email,
+    //      //challenges: ["accessToken"],
+    //      accessToken: context.otp,
+    //      ipAddress: context.ip,
+    //      userAgent: context.ua,
+    //    };
+    //    console.log("loginData", loginData);
+    //    const response = await request.post("/loginWithAccessToken").send(loginData).expect(401);
+    //    console.log("response.body", response.body)
+    //    console.log("token", response.body.token);
+    //    
+    //  })
+    //})
 
   })
 })

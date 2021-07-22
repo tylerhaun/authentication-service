@@ -1,6 +1,4 @@
-const _ = require("lodash");
 const Joi = require("joi").extend(require('@joi/date'))
-const phone = require("phone");
 const moment = require("moment");
 
 const db = require("../models")
@@ -8,7 +6,6 @@ const utils = require("../utils");
 
 import HttpError from "../http-errors";
 import AbstractController from "./AbstractController";
-
 
 
 class AccessTokenController extends AbstractController {
@@ -69,7 +66,9 @@ class AccessTokenController extends AbstractController {
     })
     this.logger.log({updateResult});
 
-    return updateResult;
+    const updatedAccessToken = await this.findOne({id: accessToken.id}); // TODO just return the other accessToken with locally updated fields
+
+    return updatedAccessToken;
 
   }
 

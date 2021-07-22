@@ -1,6 +1,7 @@
 import { LoginChallengeStrategy } from "./LoginChallengeStrategy"
 import AuthorizedIpAddressController from "../../AuthorizedIpAddressController";
 import LoginController from "../../LoginController";
+import LoginChallengeController from "../../LoginChallengeController";
 
 const Joi = require("joi");
 const _ = require("lodash");
@@ -41,6 +42,12 @@ export default class AuthorizedIpAddressChallengeStrategy extends LoginChallenge
 
     const currentAuthorizedIpAddress = _.find(ipAddresses, {ipAddress: login.ipAddress});
     console.log("currentAuthorizedIpAddress", currentAuthorizedIpAddress);
+
+    const loginChallengeController = new LoginChallengeController();
+    if (currentAuthorizedIpAddress) {
+      const updateResult = await loginChallengeController.update({id: validated.challenge.id}, {deviceId: currentAuthorizedIpAddress.id});
+      console.log({updateResult});
+    }
 
     const success = !!currentAuthorizedIpAddress;
 

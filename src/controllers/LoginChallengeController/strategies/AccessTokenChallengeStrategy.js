@@ -1,5 +1,6 @@
 import { LoginChallengeStrategy } from "./LoginChallengeStrategy"
 import AccessTokenController from "../../AccessTokenController";
+import LoginChallengeController from "../../LoginChallengeController";
 
 const Joi = require("joi");
 const utils = require("../../../utils");
@@ -24,10 +25,14 @@ export default class AccessTokenChallengeStrategy extends LoginChallengeStrategy
     const userId = validated.challenge.userId;
 
     const accessTokenController = new AccessTokenController();
-    const result = await accessTokenController.redeem({userId, code: validated.code});
+    const accessToken = await accessTokenController.redeem({userId, code: validated.code});
+    console.log({accessToken})
 
-    console.log({result})
-    const success = !!result;
+    const loginChallengeController = new LoginChallengeController();
+    const updateResult = await loginChallengeController.update({id: validated.challenge.id}, {accessTokenId: accessToken.id});
+    console.log({updateResult});
+
+    const success = !!accessToken;
     return {success};
 
   }

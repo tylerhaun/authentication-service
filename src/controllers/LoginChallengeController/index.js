@@ -1,6 +1,5 @@
 const _ = require("lodash");
 const Joi = require("joi");
-const jwt = require("jsonwebtoken");
 const moment = require("moment");
 
 const utils = require("../../utils");

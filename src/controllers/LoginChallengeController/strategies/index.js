@@ -1,6 +1,6 @@
 import PasswordChallengeStrategy from "./PasswordChallengeStrategy";
 import SmsChallengeStrategy from "./SmsChallengeStrategy";
-//import EmailChallengeStrategy from "./EmailChallengeStrategy";
+import EmailChallengeStrategy from "./EmailChallengeStrategy";
 import AuthorizedDeviceChallengeStrategy from "./AuthorizedDeviceChallengeStrategy";
 import AuthorizedIpAddressChallengeStrategy from "./AuthorizedIpAddressChallengeStrategy";
 import AccessTokenChallengeStrategy from "./AccessTokenChallengeStrategy";
@@ -14,8 +14,8 @@ export class LoginChallengeStrategyFactory {
         return new PasswordChallengeStrategy();
       case "sms":
         return new SmsChallengeStrategy();
-        //case "email":
-        //  return new EmailChallengeStrategy();
+      case "email":
+        return new EmailChallengeStrategy();
       case "device":
         return new AuthorizedDeviceChallengeStrategy();
       case "ipAddress":

@@ -37,6 +37,12 @@ module.exports = function(sequelize) {
     emailVerificationRequestId: {
       type: DataTypes.STRING,
     },
+    accessTokenId: {
+      type: DataTypes.STRING,
+    },
+    passwordId: {
+      type: DataTypes.STRING,
+    },
     //completed: {
     //  type: DataTypes.BOOLEAN,
     //},

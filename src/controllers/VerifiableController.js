@@ -36,7 +36,7 @@ class VerifiableController extends AbstractController {
     }
     this.logger.log({vrCreateArgs});
     const verificationRequestController = new this._verificationRequestController();
-    console.log({verificationRequestController, "this._verificationRequestController": this._verificationRequestController, ".create": verificationRequestController.create});
+    //console.log({verificationRequestController, "this._verificationRequestController": this._verificationRequestController, ".create": verificationRequestController.create});
     const createdVr = await verificationRequestController.create(vrCreateArgs);
     this.logger.log({createdVr});
     return createdVr;

@@ -1,5 +1,6 @@
 const _ = require("lodash");
 const Joi = require("joi");
+const phone = require("phone");
 const moment = require("moment");
 
 const db = require("../models")
@@ -18,6 +19,19 @@ class PhoneNumberController extends VerifiableController {
 
   get _verificationRequestController() {
     return SmsVerificationRequestController;
+  }
+
+  async create(data) {
+    this.logger.log({method: "create"});
+    const schema = Joi.object({
+      userId: Joi.string().required(),
+      phoneNumber: Joi.string().custom(utils.joiPhoneValidator), // consider switching for https://www.npmjs.com/package/joi-phone-number
+      isPrimary: Joi.boolean().default(false),
+    });
+    const validated = Joi.attempt(data, schema);
+    this.logger.log({validated});
+    return super.create(validated);
+
   }
 
   //async startVerification(query) {

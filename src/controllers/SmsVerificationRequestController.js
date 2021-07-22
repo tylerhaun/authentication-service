@@ -5,8 +5,8 @@ const handlebars = require("handlebars");
 const utils = require("../utils");
 const db = require("../models")
 
-import AbstractController from "./AbstractController";
 import VerificationRequestController from "./VerificationRequestController";
+import PhoneNumberController from "./PhoneNumberController";
 
 import { SmsProviderFactory } from "../SmsProvider";
 
@@ -28,14 +28,17 @@ class SmsVerificationRequestController extends VerificationRequestController {
     });
     const validated = Joi.attempt(data, schema);
 
-    const smsProviderFactory = new SmsProviderFactory()
-    const smsProvider = smsProviderFactory.get(smsProviderType);
+    const phoneNumberController = new PhoneNumberController();
+    const primaryPhone = await phoneNumberController.findOne({userId: validated.user.id, isPrimary: true});
+    this.logger.log({primaryPhone});
 
     const template = "Your code is {{code}}";
     const message = handlebars.compile(template)(validated)
 
+    const smsProviderFactory = new SmsProviderFactory()
+    const smsProvider = smsProviderFactory.get(smsProviderType);
     const sendSmsArgs = {
-      to: validated.user.phoneNumber,
+      to: primaryPhone.phoneNumber,
       message,
     };
     this.logger.log({sendSmsArgs});

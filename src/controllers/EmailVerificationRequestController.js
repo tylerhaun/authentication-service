@@ -6,6 +6,7 @@ const utils = require("../utils");
 const db = require("../models")
 
 import VerificationRequestController from "./VerificationRequestController";
+import EmailAddressController from "./EmailAddressController";
 
 const { EmailProviderFactory } = require("../EmailProvider");
 
@@ -28,16 +29,19 @@ class EmailVerificationRequestController extends VerificationRequestController {
     });
     const validated = Joi.attempt(data, schema);
 
+    const emailAddressController = new EmailAddressController();
+    const primaryEmail = await emailAddressController.findOne({userId: validated.user.id, isPrimary: true});
+    this.logger.log({primaryEmail});
 
-    const emailProviderFactory = new EmailProviderFactory()
-    const emailProvider = emailProviderFactory.get(emailProviderType);
     const subject = validated.subject || "Please verify your email";
     const verifyUrl = "http://localhost:3000/{{code}}" //TODO put in env
     const template = validated.text || `Click this link to verify your email: ${verifyUrl}`;
     const text = handlebars.compile(template)(validated)
 
+    const emailProviderFactory = new EmailProviderFactory()
+    const emailProvider = emailProviderFactory.get(emailProviderType);
     const sendEmailArgs = {
-      to: validated.user.email,
+      to: primaryEmail.emailAddress,
       subject,
       text,
     };
@@ -45,7 +49,6 @@ class EmailVerificationRequestController extends VerificationRequestController {
     this.logger.log({result});
     return result;
 
-  
   }
 
 }

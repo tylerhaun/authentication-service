@@ -1,6 +1,7 @@
 import { LoginChallengeStrategy } from "./LoginChallengeStrategy"
 import AuthorizedDeviceController from "../../AuthorizedDeviceController";
 import LoginController from "../../LoginController";
+import LoginChallengeController from "../../LoginChallengeController";
 
 const _ = require("lodash");
 const Joi = require("joi");
@@ -31,12 +32,18 @@ export default class AuthorizedDeviceChallengeStrategy extends LoginChallengeStr
     const loginController = new LoginController();
     const login = await loginController.findOne({id: challenge.loginId});
     console.log("login", login);
-    if (!login.ipAddress) {
-      throw new Error("Ip address not stored on login");
+    if (!login.userAgent) {
+      throw new Error("User agent not stored on login");
     }
 
     const currentAuthorizedDevice = _.find(devices, {userAgent: login.userAgent});
     console.log("currentAuthorizedDevice", currentAuthorizedDevice);
+
+    const loginChallengeController = new LoginChallengeController();
+    if (currentAuthorizedDevice) {
+      const updateResult = await loginChallengeController.update({id: validated.challenge.id}, {deviceId: currentAuthorizedDevice.id});
+      console.log({updateResult});
+    }
 
     const success = !!currentAuthorizedDevice;
 

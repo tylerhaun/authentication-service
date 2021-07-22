@@ -29,7 +29,7 @@ module.exports = function(sequelize) {
     },
   }, {
     sequelize,
-    modelName: "email",
+    modelName: "email_address",
     timestamps: true,
     paranoid: true,
   });

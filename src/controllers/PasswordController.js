@@ -125,7 +125,7 @@ class PasswordController extends AbstractController {
       ]
     };
     const password = await this.model.findOne(findArgs);
-    return password;
+    return password.get({plain:true});
   
   }
 

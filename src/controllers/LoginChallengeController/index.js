@@ -15,7 +15,7 @@ const { SmsProviderFactory } = require("../../SmsProvider");
 
 
 const secret = "test";
-export const challengeTypes = ["password", "sms", "email", "ipAddress", "device", "accessToken"];
+export const challengeTypes = ["password", "sms", "email", "ipAddress", "device", "accessToken", "tpa"];
 
 class LoginChallengeController extends AbstractController {
 
@@ -205,9 +205,12 @@ class LoginChallengeController extends AbstractController {
     if (result.success == true) {
       await this._markComplete(challenge.id);
     }
+    else {
+      throw new HttpError({message: "Login challenge failed", status: 401})
+    }
 
     return result;
-  
+
   }
 
   async _markComplete(id) {

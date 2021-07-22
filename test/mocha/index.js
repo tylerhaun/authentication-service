@@ -48,6 +48,7 @@ require("./api/email-address");
 require("./api/phone-number");
 require("./api/access-token");
 require("./api/one-time-password");
+require("./api/totp");
 
 
 //const axiosConfig = {
